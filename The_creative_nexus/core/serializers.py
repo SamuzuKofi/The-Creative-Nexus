@@ -45,10 +45,12 @@ class CollaborationListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Collaboration
         fields = (
-            'id', 'creator', 'creator_username', 'collaborator', 'collaborator_username',
-            'title', 'status', 'status_display', 'created_at'
+            'id', 'creator', 'creator_username', 'collaborator',
+            'collaborator_username', 'title', 'description', 'status',
+            'status_display', 'required_skills', 'timeline', 'budget_range',
+            'created_at'
         )
-        read_only_fields = ('id', 'created_at')
+        read_only_fields = ('id', 'creator', 'status', 'created_at')
 
 
 class CollaborationDetailSerializer(serializers.ModelSerializer):
@@ -131,10 +133,12 @@ class MentorshipRequestListSerializer(serializers.ModelSerializer):
     class Meta:
         model = MentorshipRequest
         fields = (
-            'id', 'mentor', 'mentor_username', 'mentee', 'mentee_username',
-            'title', 'status', 'status_display', 'experience_level', 'created_at'
+            'id', 'mentor', 'mentor_username', 'mentee',
+            'mentee_username', 'title', 'description', 'status',
+            'status_display', 'skills_to_learn', 'experience_level',
+            'created_at'
         )
-        read_only_fields = ('id', 'created_at')
+        read_only_fields = ('id', 'mentee', 'status', 'created_at')
 
 
 class MentorshipRequestDetailSerializer(serializers.ModelSerializer):

@@ -19,6 +19,12 @@
 .btn-like:active, .btn-view:active {
     transform: translateY(0);
 }
+
+.btn-like.liked {
+    background-color: var(--color-accent-light) !important;
+    border-color: var(--color-accent) !important;
+    color: var(--color-accent) !important;
+}
 </style>
 {% endblock %}
 
@@ -65,9 +71,9 @@
                         {% for work in portfolio.works.all %}
                             <div class="gallery-card" data-work-id="{{ work.id }}">
                                 {% if work.thumbnail %}
-                                    <img src="{{ work.thumbnail.url }}" alt="{{ work.title }}" class="gallery-card-img" data-work-id="{{ work.id }}" data-file-url="{{ work.file.url }}">
+                                    <img src="{{ work.thumbnail.url }}" alt="{{ work.title }}" class="gallery-card-img" data-work-id="{{ work.id }}" data-file-url="{% if work.file %}{{ work.file.url }}{% endif %}">
                                 {% else %}
-                                    <div class="gallery-card-img" style="display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--color-border-light), var(--color-border));" data-work-id="{{ work.id }}" data-file-url="{{ work.file.url }}">
+                                    <div class="gallery-card-img" style="display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--color-border-light), var(--color-border));" data-work-id="{{ work.id }}" data-file-url="{% if work.file %}{{ work.file.url }}{% endif %}">
                                         <i data-lucide="image" style="width: 48px; height: 48px; color: var(--color-text-muted);"></i>
                                     </div>
                                 {% endif %}
@@ -75,11 +81,11 @@
                                     <div class="gallery-card-title">{{ work.title }}</div>
                                     <div class="gallery-card-text">{{ work.get_work_type_display }}</div>
                                     <div class="gallery-card-actions" style="border: none; gap: 8px; margin-top: var(--space-md); padding-top: var(--space-md); border-top: 1px solid var(--color-border); display: flex;">
-                                        <button type="button" class="btn-like" data-work-id="{{ work.id }}" style="background: #F0F0F0; border: 1px solid #D0D0D0; color: var(--color-primary); cursor: pointer; padding: 8px 12px; display: inline-flex; align-items: center; gap: 6px; border-radius: var(--radius-md); font-size: 13px; font-weight: 500; transition: all 0.2s ease; flex: 1; justify-content: center;">
-                                            <i data-lucide="heart" style="width: 16px; height: 16px;"></i>
+                                        <button type="button" class="btn-like {% if work.is_liked_by_user %}liked{% endif %}" data-work-id="{{ work.id }}" style="background: #F0F0F0; border: 1px solid #D0D0D0; color: var(--color-primary); cursor: pointer; padding: 8px 12px; display: inline-flex; align-items: center; gap: 6px; border-radius: var(--radius-md); font-size: 13px; font-weight: 500; transition: all 0.2s ease; flex: 1; justify-content: center;">
+                                            <i data-lucide="heart" style="width: 16px; height: 16px;" {% if work.is_liked_by_user %}fill="currentColor"{% endif %}></i>
                                             <span class="like-count">{{ work.likes }}</span>
                                         </button>
-                                        <button type="button" class="btn-view" data-work-id="{{ work.id }}" data-file-url="{{ work.file.url }}" style="background: #F0F0F0; border: 1px solid #D0D0D0; color: var(--color-primary); cursor: pointer; padding: 8px 12px; display: inline-flex; align-items: center; gap: 6px; border-radius: var(--radius-md); font-size: 13px; font-weight: 500; transition: all 0.2s ease; flex: 1; justify-content: center;">
+                                        <button type="button" class="btn-view" data-work-id="{{ work.id }}" data-file-url="{% if work.file %}{{ work.file.url }}{% endif %}" style="background: #F0F0F0; border: 1px solid #D0D0D0; color: var(--color-primary); cursor: pointer; padding: 8px 12px; display: inline-flex; align-items: center; gap: 6px; border-radius: var(--radius-md); font-size: 13px; font-weight: 500; transition: all 0.2s ease; flex: 1; justify-content: center;">
                                             <i data-lucide="eye" style="width: 16px; height: 16px;"></i>
                                             <span class="view-count">{{ work.views }}</span>
                                         </button>
@@ -391,9 +397,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (likeCountSpan) {
                         likeCountSpan.textContent = data.likes;
                     }
+
+                    // Set liked state based on response
+                    const icon = this.querySelector('svg.lucide-heart');
+                    if (data.is_liked) {
+                        this.classList.add('liked');
+                        if (icon) {
+                            icon.setAttribute('fill', 'currentColor');
+                        }
+                    } else {
+                        this.classList.remove('liked');
+                        if (icon) {
+                            icon.removeAttribute('fill');
+                        }
+                    }
                 } else {
-                    const errorData = await response.json();
-                    alert('Error: ' + JSON.stringify(errorData));
+                    const errorData = await response.text();
+                    alert('Error: ' + errorData);
                 }
             } catch (error) {
                 alert('Error: ' + error.message);

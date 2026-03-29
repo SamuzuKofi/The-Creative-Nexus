@@ -6,7 +6,7 @@ from django.contrib import messages
 from accounts.models import CustomUser, UserProfile
 from core.models import Portfolio, CreativeWork, Collaboration, Project, Notification, MentorshipRequest
 from rest_framework.decorators import api_view, permission_classes
-from django.db.models import F
+from django.db.models import F, Exists, OuterRef
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
@@ -85,7 +85,14 @@ def portfolio_view(request, user_id=None):
             }
             return render(request, 'core/portfolio.html', context)
 
-        works = portfolio.works.all()
+        works_qs = portfolio.works.all()
+        if request.user.is_authenticated:
+            liked_subquery = CreativeWork.objects.filter(
+                pk=OuterRef('pk'), liked_by=request.user)
+            works = works_qs.annotate(is_liked_by_user=Exists(liked_subquery))
+        else:
+            works = works_qs
+
         # Increment portfolio view count when someone (not the owner) visits
         try:
             if request.user != portfolio_owner:
@@ -140,7 +147,11 @@ def portfolio_view(request, user_id=None):
             }
             return render(request, 'core/portfolio.html', context)
 
-    works = portfolio.works.all()
+    works_qs = portfolio.works.all()
+    liked_subquery = CreativeWork.objects.filter(
+        pk=OuterRef('pk'), liked_by=request.user)
+    works = works_qs.annotate(is_liked_by_user=Exists(liked_subquery))
+
     context = {
         'portfolio': portfolio,
         'works': works,

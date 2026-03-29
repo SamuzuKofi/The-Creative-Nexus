@@ -1,6 +1,9 @@
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
+from django.db.models.signals import m2m_changed
+from django.dispatch import receiver
+from django.db.models import Sum
 
 # Status choices for various models
 PROJECT_STATUS_CHOICES = (
@@ -53,8 +56,8 @@ class Portfolio(models.Model):
     featured_work = models.ForeignKey(
         'CreativeWork', on_delete=models.SET_NULL, null=True, blank=True, related_name='featured_in')
 
-    total_views = models.IntegerField(default=0)
-    total_likes = models.IntegerField(default=0)
+    total_views = models.PositiveIntegerField(default=0)
+    total_likes = models.PositiveIntegerField(default=0)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -94,7 +97,11 @@ class CreativeWork(models.Model):
 
     is_featured = models.BooleanField(default=False)
     views = models.IntegerField(default=0)
-    likes = models.IntegerField(default=0)
+    likes = models.PositiveIntegerField(default=0)
+
+    # Keep track of users who liked the work
+    liked_by = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, related_name='liked_works', blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -278,3 +285,30 @@ class MentorshipRequest(models.Model):
 
     def __str__(self):
         return f"{self.mentee.username} → {self.mentor.username}: {self.title}"
+
+
+@receiver(m2m_changed, sender=CreativeWork.liked_by.through)
+def update_portfolio_likes(sender, instance, action, **kwargs):
+    """
+    Automatically update the work's like count and the portfolio's 
+    total likes whenever a user likes or unlikes a creative work.
+    """
+    pk_set = kwargs.get('pk_set', set())
+
+    if action == 'post_add':
+        instance.likes += len(pk_set)
+        instance.save(update_fields=['likes'])
+    elif action == 'post_remove':
+        instance.likes = max(0, instance.likes - len(pk_set))
+        instance.save(update_fields=['likes'])
+    elif action == 'post_clear':
+        instance.likes = 0
+        instance.save(update_fields=['likes'])
+
+    if action in ['post_add', 'post_remove', 'post_clear']:
+        # Update the portfolio's total likes
+        if instance.portfolio:
+            total = instance.portfolio.works.aggregate(
+                total=Sum('likes'))['total'] or 0
+            instance.portfolio.total_likes = total
+            instance.portfolio.save(update_fields=['total_likes'])

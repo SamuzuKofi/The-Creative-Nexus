@@ -83,11 +83,24 @@ class CreativeWorkViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def like(self, request, pk=None):
-        """Like a creative work"""
+        """Like or unlike a creative work"""
+        if not request.user.is_authenticated:
+            return Response({'error': 'Authentication required to like a work.'}, status=status.HTTP_401_UNAUTHORIZED)
+
         work = self.get_object()
-        work.likes += 1
-        work.save()
-        return Response({'likes': work.likes})
+
+        if request.user in work.liked_by.all():
+            # User has already liked it, so "unlike"
+            work.liked_by.remove(request.user)
+            is_liked = False
+        else:
+            # User has not liked it yet, so "like"
+            work.liked_by.add(request.user)
+            is_liked = True
+
+        # The signal automatically updates counts, we just need to refresh our instance
+        work.refresh_from_db()
+        return Response({'likes': work.likes, 'is_liked': is_liked})
 
     @action(detail=True, methods=['post'])
     def view(self, request, pk=None):

@@ -19,7 +19,7 @@
                             <label class="form-label">Search creators</label>
                             <div style="position: relative;">
                                 <i data-lucide="search" style="position: absolute; left: var(--space-md); top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--color-text-muted);"></i>
-                                <input type="text" class="form-control" name="search" placeholder="Name, skills, or location..." value="{{ search }}" style="padding-left: 2.5rem;">
+                                <input type="text" class="form-control" name="search" placeholder="Name, skills, or location..." value="{{ search|default_if_none:'' }}" style="padding-left: 2.5rem;">
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -112,6 +112,9 @@
         {% endif %}
     </div>
 </section>
+ 
+<!-- Hidden CSRF token for JS actions -->
+<form id="csrfForm" style="display:none">{% csrf_token %}</form>
 
 <!-- Collaboration Modal -->
 <div class="modal fade" id="collaborationModal" tabindex="-1">
@@ -249,30 +252,33 @@ document.getElementById('collaborationForm').addEventListener('submit', async fu
         budget_range: document.getElementById('budget').value
     };
     
-    try {
-        const response = await fetch('/api/core/collaborations/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-            },
-            body: JSON.stringify(formData)
-        });
-        
-        if (response.ok) {
-            alert('Collaboration request sent successfully!');
-            bootstrap.Modal.getInstance(document.getElementById('collaborationModal')).hide();
-            window.location.reload();
-        } else {
-            const data = await response.json();
-            document.getElementById('collabError').textContent = JSON.stringify(data);
+        try {
+            const token = document.querySelector('[name=csrfmiddlewaretoken]')?.value || document.querySelector('#csrfForm input[name=csrfmiddlewaretoken]')?.value || '';
+            const response = await fetch('/api/core/collaborations/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': token
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+                alert('Collaboration request sent successfully!');
+                bootstrap.Modal.getInstance(document.getElementById('collaborationModal')).hide();
+                window.location.reload();
+            } else {
+                let text = await response.text();
+                let display = text;
+                try { display = JSON.stringify(JSON.parse(text)); } catch(e) {}
+                document.getElementById('collabError').textContent = `Error ${response.status}: ${display}`;
+                document.getElementById('collabError').classList.remove('d-none');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('collabError').textContent = 'An error occurred. Please try again. ' + (error.message || '');
             document.getElementById('collabError').classList.remove('d-none');
         }
-    } catch (error) {
-        console.error('Error:', error);
-        document.getElementById('collabError').textContent = 'An error occurred. Please try again.';
-        document.getElementById('collabError').classList.remove('d-none');
-    }
 });
 
 function openMentorshipModal(userId, username) {
@@ -299,30 +305,33 @@ document.getElementById('mentorshipForm').addEventListener('submit', async funct
         experience_level: document.getElementById('experienceLevel').value
     };
     
-    try {
-        const response = await fetch('/api/core/mentorship-requests/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-            },
-            body: JSON.stringify(formData)
-        });
-        
-        if (response.ok) {
-            alert('Mentorship request sent successfully!');
-            bootstrap.Modal.getInstance(document.getElementById('mentorshipModal')).hide();
-            window.location.reload();
-        } else {
-            const data = await response.json();
-            document.getElementById('mentorshipError').textContent = JSON.stringify(data);
+        try {
+            const token = document.querySelector('[name=csrfmiddlewaretoken]')?.value || document.querySelector('#csrfForm input[name=csrfmiddlewaretoken]')?.value || '';
+            const response = await fetch('/api/core/mentorship-requests/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': token
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+                alert('Mentorship request sent successfully!');
+                bootstrap.Modal.getInstance(document.getElementById('mentorshipModal')).hide();
+                window.location.reload();
+            } else {
+                let text = await response.text();
+                let display = text;
+                try { display = JSON.stringify(JSON.parse(text)); } catch(e) {}
+                document.getElementById('mentorshipError').textContent = `Error ${response.status}: ${display}`;
+                document.getElementById('mentorshipError').classList.remove('d-none');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('mentorshipError').textContent = 'An error occurred. Please try again. ' + (error.message || '');
             document.getElementById('mentorshipError').classList.remove('d-none');
         }
-    } catch (error) {
-        console.error('Error:', error);
-        document.getElementById('mentorshipError').textContent = 'An error occurred. Please try again.';
-        document.getElementById('mentorshipError').classList.remove('d-none');
-    }
 });
 </script>
 {% endblock %}
