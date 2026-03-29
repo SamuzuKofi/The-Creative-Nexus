@@ -33,33 +33,34 @@
     <div class="container-premium">
         {% if portfolio %}
             <!-- Portfolio Header -->
-            <div class="profile-header">
-                <div class="row align-items-center">
-                    <div class="col-md-8">
-                        <h1 style="margin-bottom: var(--space-sm);">{{ portfolio.title }}</h1>
-                        <p style="margin-bottom: var(--space-md);">{{ portfolio.description }}</p>
-                        <div style="display: flex; gap: var(--space-sm); flex-wrap: wrap;">
-                            <span class="badge badge-secondary" style="display: flex; align-items: center; gap: 4px;">
-                                <i data-lucide="eye" style="width: 14px; height: 14px;"></i>
-                                {{ portfolio.total_views }} Views
-                            </span>
-                            <span class="badge badge-secondary" style="display: flex; align-items: center; gap: 4px;">
-                                <i data-lucide="heart" style="width: 14px; height: 14px;"></i>
-                                {{ portfolio.total_likes }} Likes
-                            </span>
-                            {% if portfolio.category %}
-                                <span class="badge badge-accent">{{ portfolio.get_category_display }}</span>
-                            {% endif %}
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-3">
+                <div>
+                    <h1 class="fw-bold" style="margin-bottom: var(--space-sm);">{{ portfolio.title }}</h1>
+                    <p class="text-muted fs-5" style="margin-bottom: var(--space-lg); max-width: 65ch;">{{ portfolio.description }}</p>
+                    <div class="d-flex flex-wrap align-items-center gap-4">
+                        <div class="d-inline-flex align-items-center text-muted">
+                            <i data-lucide="eye" class="me-2" style="width: 16px; height: 16px;"></i>
+                            <span class="fw-medium">{{ portfolio.total_views }}</span>&nbsp;Views
                         </div>
-                    </div>
-                    <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                        {% if portfolio.creator == user %}
-                            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#uploadWorkModal">
-                                <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
-                                Add Works
-                            </button>
+                        <div class="d-inline-flex align-items-center text-muted">
+                            <i data-lucide="heart" class="me-2" style="width: 16px; height: 16px;"></i>
+                            <span class="fw-medium">{{ portfolio.total_likes }}</span>&nbsp;Likes
+                        </div>
+                        {% if portfolio.category %}
+                            <div class="d-inline-flex align-items-center text-muted">
+                                <i data-lucide="tag" class="me-2" style="width: 16px; height: 16px;"></i>
+                                <span class="fw-medium">{{ portfolio.get_category_display }}</span>
+                            </div>
                         {% endif %}
                     </div>
+                </div>
+                <div class="mt-3 mt-md-0 flex-shrink-0">
+                    {% if portfolio.creator == user %}
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadWorkModal">
+                            <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
+                            Add Works
+                        </button>
+                    {% endif %}
                 </div>
             </div>
 
