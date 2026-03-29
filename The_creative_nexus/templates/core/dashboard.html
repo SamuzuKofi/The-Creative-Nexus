@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - The Creative Nexus{% endblock %}
+
+{% block content %}
+<section style="padding: var(--space-3xl) 0;">
+    <div class="container-premium">
+        <div class="row" style="--bs-gutter-x: var(--space-xl);">
+            <!-- Sidebar -->
+            <div class="col-lg-3 mb-4">
+                <div class="card" style="position: sticky; top: 100px;">
+                    <div class="card-body text-center" style="padding: var(--space-xl);">
+                        {% if user.profile.profile_picture %}
+                            <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}" class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover; border: 3px solid var(--color-accent);">
+                        {% else %}
+                            <div class="mb-3" style="width: 100px; height: 100px; background: linear-gradient(135deg, var(--color-border-light), var(--color-border)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                                <i data-lucide="user" style="width: 40px; height: 40px; color: var(--color-text-muted);"></i>
+                            </div>
+                        {% endif %}
+                        <h5 style="margin-bottom: var(--space-xs);">{{ user.get_full_name|default:user.username }}</h5>
+                        <span class="badge badge-accent mb-3">{{ user.profile.get_role_display }}</span>
+                        <a href="{% url 'profile' %}" class="btn btn-secondary btn-sm w-100">
+                            <i data-lucide="edit" style="width: 16px; height: 16px;"></i>
+                            Edit Profile
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="card mt-3">
+                    <div class="card-body" style="padding: var(--space-lg);">
+                        <h6 style="margin-bottom: var(--space-md); font-family: var(--font-heading);">Quick Stats</h6>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-sm); padding-bottom: var(--space-sm); border-bottom: 1px solid var(--color-border-light);">
+                            <span style="font-size: 0.9rem;">Portfolio Views</span>
+                            <strong>{{ portfolio.total_views|default:0 }}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-sm); padding-bottom: var(--space-sm); border-bottom: 1px solid var(--color-border-light);">
+                            <span style="font-size: 0.9rem;">Total Likes</span>
+                            <strong>{{ portfolio.total_likes|default:0 }}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="font-size: 0.9rem;">Collaborations</span>
+                            <strong>{{ collaborations.count }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-lg-9">
+                <!-- Welcome -->
+                <div class="alert alert-info mb-4" style="display: flex; align-items: center; gap: var(--space-sm);">
+                    <i data-lucide="sparkles" style="width: 20px; height: 20px; flex-shrink: 0;"></i>
+                    <div>
+                        Welcome back, <strong>{{ user.first_name|default:user.username }}</strong>!
+                        {% if not portfolio %}
+                            <a href="{% url 'portfolio' %}" style="margin-left: var(--space-sm);">Create your portfolio</a> to get started.
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Notifications -->
+                {% if unread_notifications %}
+                    <div class="card mb-4">
+                        <div class="card-header" style="display: flex; align-items: center; gap: var(--space-sm);">
+                            <i data-lucide="bell" style="width: 18px; height: 18px;"></i>
+                            <h6 style="margin: 0;">Recent Notifications ({{ unread_notifications.count }})</h6>
+                        </div>
+                        <div class="card-body" style="padding: var(--space-lg);">
+                            {% for notification in unread_notifications|slice:":5" %}
+                                <div style="margin-bottom: var(--space-md); padding-bottom: var(--space-md); border-bottom: 1px solid var(--color-border-light); {% if forloop.last %}border-bottom: none; margin-bottom: 0; padding-bottom: 0;{% endif %}">
+                                    <h6 style="margin-bottom: var(--space-xs); font-size: 0.95rem;">{{ notification.title }}</h6>
+                                    <p style="margin: 0; font-size: 0.9rem;">{{ notification.message }}</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- My Works -->
+                <div class="card mb-4">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: var(--space-sm);">
+                            <i data-lucide="image" style="width: 18px; height: 18px;"></i>
+                            <h6 style="margin: 0;">My Works ({{ my_works.count }})</h6>
+                        </div>
+                        <a href="{% url 'portfolio' %}" class="btn btn-primary btn-sm">
+                            <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
+                            Upload Work
+                        </a>
+                    </div>
+                    <div class="card-body" style="padding: var(--space-lg);">
+                        {% if my_works %}
+                            <div class="gallery-grid" style="grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));">
+                                {% for work in my_works %}
+                                    <div class="gallery-card">
+                                        {% if work.thumbnail %}
+                                            <img src="{{ work.thumbnail.url }}" alt="{{ work.title }}" class="gallery-card-img" style="height: 160px;">
+                                        {% else %}
+                                            <div class="gallery-card-img" style="height: 160px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--color-border-light), var(--color-border));">
+                                                <i data-lucide="image" style="width: 32px; height: 32px; color: var(--color-text-muted);"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div class="gallery-card-body" style="padding: var(--space-sm);">
+                                            <div class="gallery-card-title" style="font-size: 0.85rem;">{{ work.title|truncatewords:3 }}</div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i data-lucide="image-off" style="width: 48px; height: 48px; color: var(--color-text-muted); margin-bottom: var(--space-md);"></i>
+                                <p>No works uploaded yet. Start building your portfolio!</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Collaborations -->
+                <div class="card">
+                    <div class="card-header" style="display: flex; align-items: center; gap: var(--space-sm);">
+                        <i data-lucide="handshake" style="width: 18px; height: 18px;"></i>
+                        <h6 style="margin: 0;">Collaborations</h6>
+                    </div>
+                    <div class="card-body" style="padding: var(--space-lg);">
+                        {% if collaborations %}
+                            <div class="list-group list-group-flush">
+                                {% for collab in collaborations|slice:":5" %}
+                                    <div class="list-group-item d-flex justify-content-between align-items-center" style="padding: var(--space-md) 0; border-bottom: 1px solid var(--color-border-light);">
+                                        <div>
+                                            <h6 style="margin-bottom: var(--space-xs); font-size: 0.95rem;">{{ collab.title }}</h6>
+                                            <p style="margin: 0; font-size: 0.85rem;">with {{ collab.collaborator.username }}</p>
+                                        </div>
+                                        <span class="badge {% if collab.status == 'accepted' %}badge-accent{% else %}badge-secondary{% endif %}">
+                                            {{ collab.get_status_display }}
+                                        </span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i data-lucide="handshake" style="width: 48px; height: 48px; color: var(--color-text-muted); margin-bottom: var(--space-md);"></i>
+                                <p>No collaborations yet. Explore creators to find partners!</p>
+                                <a href="{% url 'explore' %}" class="btn btn-primary btn-sm mt-2">
+                                    <i data-lucide="compass" style="width: 16px; height: 16px;"></i>
+                                    Explore Creators
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

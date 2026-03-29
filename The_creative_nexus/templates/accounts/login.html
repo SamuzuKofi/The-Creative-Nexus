@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign In - The Creative Nexus{% endblock %}
+
+{% block content %}
+<section style="padding: var(--space-4xl) 0; min-height: calc(100vh - 300px); display: flex; align-items: center;">
+    <div class="container-premium">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="text-center mb-5">
+                    <div style="width: 64px; height: 64px; background: var(--color-accent-light); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-md);">
+                        <i data-lucide="log-in" style="width: 28px; height: 28px; color: var(--color-accent);"></i>
+                    </div>
+                    <h2 style="margin-bottom: var(--space-xs);">Welcome Back</h2>
+                    <p>Sign in to continue your creative journey</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-body" style="padding: var(--space-2xl);">
+                        <form id="loginForm" method="post">
+                            {% csrf_token %}
+                            
+                            <div class="mb-4">
+                                <label for="email" class="form-label">Email Address</label>
+                                <div style="position: relative;">
+                                    <i data-lucide="mail" style="position: absolute; left: var(--space-md); top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--color-text-muted);"></i>
+                                    <input type="email" class="form-control" id="email" name="email" placeholder="you@example.com" required style="padding-left: 2.5rem;">
+                                </div>
+                                <div id="emailError" class="text-danger mt-1" style="font-size: 0.85rem;"></div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="password" class="form-label">Password</label>
+                                <div style="position: relative;">
+                                    <i data-lucide="lock" style="position: absolute; left: var(--space-md); top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--color-text-muted);"></i>
+                                    <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required style="padding-left: 2.5rem;">
+                                </div>
+                                <div id="passwordError" class="text-danger mt-1" style="font-size: 0.85rem;"></div>
+                            </div>
+
+                            <div id="errorMessage" class="alert alert-danger d-none" role="alert" style="margin-bottom: var(--space-md);"></div>
+
+                            <button type="submit" class="btn btn-primary w-100" style="margin-bottom: var(--space-md);">
+                                <i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i>
+                                Sign In
+                            </button>
+                        </form>
+
+                        <div style="text-align: center; padding-top: var(--space-md); border-top: 1px solid var(--color-border);">
+                            <p style="margin: 0; font-size: 0.95rem;">
+                                Don't have an account? 
+                                <a href="{% url 'register' %}" style="font-weight: 500;">Create one</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4" style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-md);">
+                    <div style="display: flex; align-items: flex-start; gap: var(--space-sm);">
+                        <i data-lucide="info" style="width: 18px; height: 18px; color: var(--color-accent); flex-shrink: 0; margin-top: 2px;"></i>
+                        <small style="color: var(--color-text-muted); line-height: 1.5;">
+                            You must verify your email address before logging in. Check your inbox for the verification link.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+<script>
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value
+    };
+    
+    try {
+        const response = await fetch('/api/accounts/login/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            window.location.href = '{% url "dashboard" %}';
+        } else {
+            // Handle validation errors
+            let errorMsg = 'Login failed. Please check your credentials.';
+            if (data.non_field_errors) {
+                errorMsg = data.non_field_errors[0];
+            } else if (data.error) {
+                errorMsg = data.error;
+            }
+            document.getElementById('errorMessage').textContent = errorMsg;
+            document.getElementById('errorMessage').classList.remove('d-none');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+    }
+});
+</script>
+{% endblock %}

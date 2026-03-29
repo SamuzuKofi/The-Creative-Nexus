@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Account - The Creative Nexus{% endblock %}
+
+{% block content %}
+<section style="padding: var(--space-4xl) 0; min-height: calc(100vh - 300px); display: flex; align-items: center;">
+    <div class="container-premium">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="text-center mb-5">
+                    <div style="width: 64px; height: 64px; background: var(--color-accent-light); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-md);">
+                        <i data-lucide="user-plus" style="width: 28px; height: 28px; color: var(--color-accent);"></i>
+                    </div>
+                    <h2 style="margin-bottom: var(--space-xs);">Create Your Account</h2>
+                    <p>Join Ghana's premier creative community</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-body" style="padding: var(--space-2xl);">
+                        <form id="registerForm" method="post">
+                            {% csrf_token %}
+                            
+                            <div class="mb-4">
+                                <label for="email" class="form-label">Email Address</label>
+                                <div style="position: relative;">
+                                    <i data-lucide="mail" style="position: absolute; left: var(--space-md); top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--color-text-muted);"></i>
+                                    <input type="email" class="form-control" id="email" name="email" placeholder="you@example.com" required style="padding-left: 2.5rem;">
+                                </div>
+                                <div id="emailError" class="text-danger mt-1" style="font-size: 0.85rem;"></div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="username" class="form-label">Username</label>
+                                <div style="position: relative;">
+                                    <i data-lucide="at-sign" style="position: absolute; left: var(--space-md); top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--color-text-muted);"></i>
+                                    <input type="text" class="form-control" id="username" name="username" placeholder="Choose a username" required style="padding-left: 2.5rem;">
+                                </div>
+                                <div id="usernameError" class="text-danger mt-1" style="font-size: 0.85rem;"></div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <label for="firstName" class="form-label">First Name</label>
+                                    <input type="text" class="form-control" id="firstName" name="first_name" placeholder="First name">
+                                </div>
+
+                                <div class="col-md-6 mb-4">
+                                    <label for="lastName" class="form-label">Last Name</label>
+                                    <input type="text" class="form-control" id="lastName" name="last_name" placeholder="Last name">
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="role" class="form-label">I am a...</label>
+                                <select class="form-select" id="role" name="role" required>
+                                    <option value="">Select your role</option>
+                                    <option value="creator">Creator (Artist)</option>
+                                    <option value="client">Client (Looking for Services)</option>
+                                    <option value="mentor">Mentor (Experienced Professional)</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-4">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required minlength="8">
+                            <small class="text-muted">Minimum 8 characters</small>
+                            <div id="passwordError" class="text-danger mt-1"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="passwordConfirm" class="form-label">Confirm Password</label>
+                            <input type="password" class="form-control" id="passwordConfirm" name="password_confirm" required>
+                            <div id="confirmError" class="text-danger mt-1"></div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 mb-3">
+                            <i class="fas fa-check"></i> Create Account
+                        </button>
+                    </form>
+
+                    <div id="successMessage" class="alert alert-success d-none" role="alert">
+                        Registration successful! Please check your email to verify your account.
+                    </div>
+
+                    <hr>
+                    <p class="text-center">Already have an account? <a href="{% url 'login' %}">Login here</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('registerForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const password = document.getElementById('password').value;
+    const passwordConfirm = document.getElementById('passwordConfirm').value;
+    
+    if (password !== passwordConfirm) {
+        document.getElementById('confirmError').textContent = 'Passwords do not match';
+        return;
+    }
+    
+    const formData = {
+        email: document.getElementById('email').value,
+        username: document.getElementById('username').value,
+        first_name: document.getElementById('firstName').value,
+        last_name: document.getElementById('lastName').value,
+        password: password,
+        password_confirm: passwordConfirm,
+        role: document.getElementById('role').value
+    };
+    
+    try {
+        const response = await fetch('/api/accounts/register/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            document.getElementById('registerForm').reset();
+            document.getElementById('successMessage').classList.remove('d-none');
+            setTimeout(() => {
+                window.location.href = '{% url "home" %}';
+            }, 3000);
+        } else {
+            if (data.email) document.getElementById('emailError').textContent = data.email[0];
+            if (data.username) document.getElementById('usernameError').textContent = data.username[0];
+            if (data.password) document.getElementById('passwordError').textContent = data.password[0];
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+    }
+});
+</script>
+{% endblock %}

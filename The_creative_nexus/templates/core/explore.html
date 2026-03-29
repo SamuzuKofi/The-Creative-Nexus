@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+
+{% block title %}Explore - The Creative Nexus{% endblock %}
+
+{% block content %}
+<section style="padding: var(--space-3xl) 0;">
+    <div class="container-premium">
+        <div class="section-header">
+            <h2>Explore Creators</h2>
+            <p>Discover talented professionals across Ghana</p>
+        </div>
+
+        <!-- Filters -->
+        <div class="card" style="margin-bottom: var(--space-2xl);">
+            <div class="card-body">
+                <form method="get">
+                    <div class="row g-3">
+                        <div class="col-md-5">
+                            <label class="form-label">Search</label>
+                            <div style="position: relative;">
+                                <i data-lucide="search" style="position: absolute; left: var(--space-md); top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--color-text-muted);"></i>
+                                <input type="text" class="form-control" name="search" placeholder="Name, skills, or location..." value="{{ search }}" style="padding-left: 2.5rem;">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Role</label>
+                            <select class="form-select" name="role">
+                                <option value="">All Roles</option>
+                                <option value="creator" {% if selected_role == 'creator' %}selected{% endif %}>Creators</option>
+                                <option value="mentor" {% if selected_role == 'mentor' %}selected{% endif %}>Mentors</option>
+                                <option value="client" {% if selected_role == 'client' %}selected{% endif %}>Clients</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i data-lucide="search" style="width: 18px; height: 18px;"></i>
+                                Search
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Profiles Grid -->
+        {% if profiles %}
+            <div class="row" style="--bs-gutter-y: var(--space-lg);">
+                {% for profile in profiles %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100">
+                            <div class="card-body" style="padding: var(--space-xl); text-align: center;">
+                                <!-- Profile Picture -->
+                                {% if profile.profile_picture %}
+                                    <img src="{{ profile.profile_picture.url }}" alt="{{ profile.user.username }}" class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover; border: 3px solid var(--color-accent);">
+                                {% else %}
+                                    <div class="mb-3" style="width: 100px; height: 100px; background: linear-gradient(135deg, var(--color-border-light), var(--color-border)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                                        <i data-lucide="user" style="width: 40px; height: 40px; color: var(--color-text-muted);"></i>
+                                    </div>
+                                {% endif %}
+
+                                <h5 style="margin-bottom: var(--space-xs);">{{ profile.user.get_full_name|default:profile.user.username }}</h5>
+                                <span class="badge badge-accent" style="margin-bottom: var(--space-md);">{{ profile.get_role_display }}</span>
+
+                                {% if profile.location %}
+                                    <p style="font-size: 0.9rem; margin-bottom: var(--space-sm);">
+                                        <i data-lucide="map-pin" style="width: 14px; height: 14px; display: inline; vertical-align: middle;"></i>
+                                        {{ profile.location }}
+                                    </p>
+                                {% endif %}
+
+                                {% if profile.bio %}
+                                    <p style="font-size: 0.9rem; margin-bottom: var(--space-md);">{{ profile.bio|truncatewords:12 }}</p>
+                                {% endif %}
+
+                                {% if profile.skills_list %}
+                                    <div style="margin-bottom: var(--space-md);">
+                                        {% for skill in profile.skills_list|slice:":4" %}
+                                            <span class="badge badge-secondary" style="margin: 2px;">{{ skill }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+
+                                <div class="d-grid gap-2">
+                                    <a href="{% url 'view-portfolio' user_id=profile.user.id %}" class="btn btn-secondary btn-sm">
+                                        <i data-lucide="eye" style="width: 16px; height: 16px;"></i>
+                                        View Portfolio
+                                    </a>
+                                    {% if user.is_authenticated and profile.user != user %}
+                                        <a href="#" class="btn btn-primary btn-sm" onclick="openCollaborationModal({{ profile.user.id }}, '{{ profile.user.username }}')">
+                                            <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
+                                            Collaborate
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <div style="width: 80px; height: 80px; background: var(--color-border-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-lg);">
+                    <i data-lucide="search-x" style="width: 40px; height: 40px; color: var(--color-text-muted);"></i>
+                </div>
+                <h4 style="margin-bottom: var(--space-sm);">No creators found</h4>
+                <p>Try adjusting your search filters to find what you're looking for.</p>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Collaboration Modal -->
+<div class="modal fade" id="collaborationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Send Collaboration Request</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="collaborationForm">
+                <div class="modal-body">
+                    <input type="hidden" id="collaboratorId">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">To:</label>
+                        <p id="collaboratorName" style="margin: 0; font-weight: 600;"></p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="collabTitle" class="form-label">Project Title</label>
+                        <input type="text" class="form-control" id="collabTitle" name="title" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="collabDesc" class="form-label">Description</label>
+                        <textarea class="form-control" id="collabDesc" name="description" rows="3" required></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="requiredSkills" class="form-label">Required Skills</label>
+                        <input type="text" class="form-control" id="requiredSkills" name="required_skills" placeholder="e.g., 3D Modeling, Animation">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="timeline" class="form-label">Timeline</label>
+                        <input type="text" class="form-control" id="timeline" name="timeline" placeholder="e.g., 2 months">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="budget" class="form-label">Budget Range</label>
+                        <input type="text" class="form-control" id="budget" name="budget_range" placeholder="e.g., $500 - $1000">
+                    </div>
+
+                    <div id="collabError" class="alert alert-danger d-none"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i data-lucide="send" style="width: 16px; height: 16px;"></i>
+                        Send Request
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openCollaborationModal(userId, username) {
+    if (!{{ user.is_authenticated|lower }}) {
+        window.location.href = "{% url 'login' %}";
+        return;
+    }
+    document.getElementById('collaboratorId').value = userId;
+    document.getElementById('collaboratorName').textContent = username;
+    var modal = new bootstrap.Modal(document.getElementById('collaborationModal'));
+    modal.show();
+}
+
+document.getElementById('collaborationForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        collaborator: document.getElementById('collaboratorId').value,
+        title: document.getElementById('collabTitle').value,
+        description: document.getElementById('collabDesc').value,
+        required_skills: document.getElementById('requiredSkills').value,
+        timeline: document.getElementById('timeline').value,
+        budget_range: document.getElementById('budget').value
+    };
+    
+    fetch('/api/core/collaborations/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response =u003e {
+        if (response.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('collaborationModal')).hide();
+            alert('Collaboration request sent successfully!');
+            document.getElementById('collaborationForm').reset();
+        } else {
+            return response.json().then(data =u003e {
+                throw new Error(data.detail || 'Failed to send request');
+            });
+        }
+    })
+    .catch(error =u003e {
+        document.getElementById('collabError').textContent = error.message;
+        document.getElementById('collabError').classList.remove('d-none');
+    });
+});
+</script>
+{% endblock %}

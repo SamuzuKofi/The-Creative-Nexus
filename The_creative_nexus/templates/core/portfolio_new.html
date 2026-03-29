@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+
+{% block title %}Portfolio - The Creative Nexus{% endblock %}
+
+{% block content %}
+<div class="container-lg py-5">
+    {% if portfolio %}
+        <!-- Portfolio Header -->
+        <div class="profile-header">
+            <div class="row">
+                <div class="col-md-9">
+                    <h1 class="mb-2">{{ portfolio.title }}</h1>
+                    <p class="text-muted">{{ portfolio.description }}</p>
+                    <div class="mt-3">
+                        <span class="badge bg-info me-2"><i class="fas fa-eye"></i> {{ portfolio.total_views }} Views</span>
+                        <span class="badge bg-danger"><i class="fas fa-heart"></i> {{ portfolio.total_likes }} Likes</span>
+                    </div>
+                </div>
+                <div class="col-md-3 text-end">
+                    {% if portfolio.creator == user %}
+                        <a href="{% url 'dashboard' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-plus"></i> Add Works
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Works Gallery -->
+        <div class="mt-5">
+            <h2 class="mb-4"><i class="fas fa-image"></i> Creative Works</h2>
+            {% if portfolio.works.all %}
+                <div class="gallery-grid">
+                    {% for work in portfolio.works.all %}
+                        <div class="gallery-card">
+                            {% if work.thumbnail %}
+                                <img src="{{ work.thumbnail.url }}" alt="{{ work.title }}" class="gallery-card-img">
+                            {% else %}
+                                <div class="gallery-card-img" style="display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-image" style="color: white; font-size: 2rem;"></i>
+                                </div>
+                            {% endif %}
+                            <div class="gallery-card-body">
+                                <div class="gallery-card-title">{{ work.title }}</div>
+                                <div class="gallery-card-text">{{ work.get_work_type_display }}</div>
+                                <div class="gallery-card-actions">
+                                    <span><i class="fas fa-heart"></i> {{ work.likes }}</span>
+                                    <span><i class="fas fa-eye"></i> {{ work.views }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info text-center py-5">
+                    <i class="fas fa-inbox" style="font-size: 2rem;"></i>
+                    <p class="mt-3">No works in this portfolio yet.</p>
+                    {% if portfolio.creator == user %}
+                        <a href="{% url 'dashboard' %}" class="btn btn-primary">Upload Your First Work</a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Creator Info -->
+        <div class="mt-5 row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        {% if portfolio.creator.profile.profile_picture %}
+                            <img src="{{ portfolio.creator.profile.profile_picture.url }}" alt="{{ portfolio.creator.username }}" class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover; border: 3px solid #667eea;">
+                        {% else %}
+                            <div style="width: 100px; height: 100px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; margin: 0 auto;">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        {% endif %}
+                        <h4 class="mt-3">{{ portfolio.creator.get_full_name|default:portfolio.creator.username }}</h4>
+                        <p class="text-muted">{{ portfolio.creator.profile.get_role_display }}</p>
+                        {% if portfolio.creator != user %}
+                            <a href="#" class="btn btn-primary btn-sm">
+                                <i class="fas fa-message"></i> Collaborate
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>About</h5>
+                        <p>{{ portfolio.creator.profile.bio }}</p>
+
+                        {% if creator_skills %}
+                            <h6 class="mt-3">Skills</h6>
+                            <div class="mb-3">
+                                {% for skill in creator_skills %}
+                                    <span class="badge bg-primary me-2">{{ skill }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        {% if portfolio.creator.profile.location %}
+                            <p><i class="fas fa-map-marker-alt"></i> {{ portfolio.creator.profile.location }}</p>
+                        {% endif %}
+
+                        {% if portfolio.creator.profile.website %}
+                            <p><i class="fas fa-link"></i> <a href="{{ portfolio.creator.profile.website }}" target="_blank">Check Out My Website</a></p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% else %}
+        <!-- No Portfolio -->
+        {% if is_own_portfolio %}
+            <!-- Show creation form only for user's own portfolio -->
+            <div class="row justify-content-center">
+                <div class="col-md-6 text-center">
+                    <div style="font-size: 4rem; color: #667eea; margin-bottom: 20px;">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                    <h2>No Portfolio Yet</h2>
+                    <p class="text-muted">You don't have a portfolio created yet. Let's get started!</p>
+                    <div class="mt-4">
+                        <form method="post" enctype="multipart/form-data" class="row g-3 justify-content-center">
+                            {% csrf_token %}
+                            <div class="col-md-10 mb-3">
+                                <label class="form-label">Portfolio Title</label>
+                                <input type="text" class="form-control form-control-lg" name="title" placeholder="e.g., My Creative Works" required>
+                            </div>
+
+                            <div class="col-md-10 mb-3">
+                                <label class="form-label">Category</label>
+                                <select class="form-select form-select-lg" name="category" required>
+                                    <option value="">Select a category...</option>
+                                    <option value="visual_arts">Visual Arts</option>
+                                    <option value="design">Design</option>
+                                    <option value="animation">Animation</option>
+                                    <option value="photography">Photography</option>
+                                    <option value="filmmaking">Filmmaking</option>
+                                    <option value="music">Music</option>
+                                    <option value="writing">Writing</option>
+                                    <option value="tech">Technology</option>
+                                    <option value="mixed_media">Mixed Media</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-10 mb-3">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-control form-control-lg" name="description" placeholder="Describe your portfolio and creative work..." rows="3" required></textarea>
+                            </div>
+
+                            <div class="col-md-10 mb-3">
+                                <label class="form-label">Cover Image (Optional)</label>
+                                <input type="file" class="form-control form-control-lg" name="cover_image" accept="image/*">
+                                <small class="text-muted">Upload a cover image for your portfolio (JPG, PNG, etc.)</small>
+                            </div>
+
+                            <div class="col-md-10">
+                                <button type="submit" class="btn btn-primary btn-lg w-100">
+                                    <i class="fas fa-check"></i> Create Portfolio
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <!-- Show message for other users without portfolio -->
+            <div class="row justify-content-center">
+                <div class="col-md-6 text-center">
+                    <div style="font-size: 4rem; color: #ccc; margin-bottom: 20px;">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                    <h2>No Portfolio Yet</h2>
+                    <p class="text-muted">{{ portfolio_owner.get_full_name|default:portfolio_owner.username }} hasn't created a portfolio yet.</p>
+                </div>
+            </div>
+        {% endif %}
+    {% endif %}
+</div>
+{% endblock %}
