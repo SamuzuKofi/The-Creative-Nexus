@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.utils import timezone
 from django.db.models import Q
 
-from .models import Portfolio, CreativeWork, Collaboration, Project, Notification, Rating, MentorshipRequest
+from .models import Portfolio, CreativeWork, Collaboration, Project, Notification, Rating, MentorshipRequest, AuditLog
 from .serializers import (
     PortfolioSerializer,
     CreativeWorkSerializer,
@@ -129,7 +129,14 @@ class CollaborationViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """Create collaboration request"""
-        serializer.save(creator=self.request.user)
+        collaboration = serializer.save(creator=self.request.user)
+        AuditLog.objects.create(
+            actor=self.request.user,
+            action='creation',
+            entity_type='Collaboration',
+            entity_id=collaboration.id,
+            details=f"Collaboration request '{collaboration.title}' created."
+        )
 
     @action(detail=True, methods=['post'])
     def accept(self, request, pk=None):
@@ -163,6 +170,14 @@ class CollaborationViewSet(viewsets.ModelViewSet):
             created_by=collaboration.creator,
         )
 
+        AuditLog.objects.create(
+            actor=request.user,
+            action='approval',
+            entity_type='Collaboration',
+            entity_id=collaboration.id,
+            details='Collaboration request accepted.'
+        )
+
         return Response({'status': 'accepted'})
 
     @action(detail=True, methods=['post'])
@@ -189,6 +204,14 @@ class CollaborationViewSet(viewsets.ModelViewSet):
             related_collaboration=collaboration
         )
 
+        AuditLog.objects.create(
+            actor=request.user,
+            action='rejection',
+            entity_type='Collaboration',
+            entity_id=collaboration.id,
+            details='Collaboration request rejected.'
+        )
+
         return Response({'status': 'rejected'})
 
 
@@ -206,7 +229,14 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """Create project"""
-        serializer.save(created_by=self.request.user)
+        project = serializer.save(created_by=self.request.user)
+        AuditLog.objects.create(
+            actor=self.request.user,
+            action='creation',
+            entity_type='Project',
+            entity_id=project.id,
+            details=f"Project '{project.title}' created."
+        )
 
     @action(detail=True, methods=['post'])
     def add_member(self, request, pk=None):
@@ -242,6 +272,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         if new_status not in dict([(choice[0], choice[0]) for choice in Project._meta.get_field('status').choices]):
             return Response({'error': 'Invalid status'}, status=status.HTTP_400_BAD_REQUEST)
 
+        old_status = project.status
         project.status = new_status
         project.save()
 
@@ -255,6 +286,14 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 message=f'{request.user.username} updated {project.title} status to {new_status}',
                 related_project=project
             )
+
+        AuditLog.objects.create(
+            actor=request.user,
+            action='status_change',
+            entity_type='Project',
+            entity_id=project.id,
+            details=f"Status changed from '{old_status}' to '{new_status}'."
+        )
 
         return Response(ProjectSerializer(project).data)
 
@@ -340,7 +379,14 @@ class MentorshipRequestViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """Create mentorship request"""
-        serializer.save(mentee=self.request.user)
+        mentorship = serializer.save(mentee=self.request.user)
+        AuditLog.objects.create(
+            actor=self.request.user,
+            action='creation',
+            entity_type='MentorshipRequest',
+            entity_id=mentorship.id,
+            details=f"Mentorship request '{mentorship.title}' created."
+        )
 
     @action(detail=True, methods=['post'])
     def accept(self, request, pk=None):
@@ -364,6 +410,14 @@ class MentorshipRequestViewSet(viewsets.ModelViewSet):
             title=f'{request.user.username} accepted your mentorship request',
             message=f'Great! {request.user.username} has accepted your mentorship request: {mentorship.title}',
             related_mentorship=mentorship
+        )
+
+        AuditLog.objects.create(
+            actor=request.user,
+            action='approval',
+            entity_type='MentorshipRequest',
+            entity_id=mentorship.id,
+            details='Mentorship request accepted.'
         )
 
         return Response({'status': 'accepted'})
@@ -390,6 +444,14 @@ class MentorshipRequestViewSet(viewsets.ModelViewSet):
             title=f'{request.user.username} declined your mentorship request',
             message=f'{request.user.username} was unable to accept your mentorship request: {mentorship.title}',
             related_mentorship=mentorship
+        )
+
+        AuditLog.objects.create(
+            actor=request.user,
+            action='rejection',
+            entity_type='MentorshipRequest',
+            entity_id=mentorship.id,
+            details='Mentorship request rejected.'
         )
 
         return Response({'status': 'rejected'})

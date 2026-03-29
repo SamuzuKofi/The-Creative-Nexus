@@ -9,7 +9,12 @@ from django.core.mail import EmailMultiAlternatives
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 import logging
+import os
+from io import BytesIO
+from PIL import Image
+from django.core.files.base import ContentFile
 from django.conf import settings
+from django.core.exceptions import ValidationError
 
 # Status choices for various models
 PROJECT_STATUS_CHOICES = (
@@ -34,6 +39,15 @@ MENTORSHIP_STATUS_CHOICES = (
     ('active', 'Active'),
     ('completed', 'Completed'),
 )
+
+# File size validator
+
+
+def validate_file_size(value):
+    """Ensure file size is not more than 50MB."""
+    limit = 50 * 1024 * 1024
+    if value.size > limit:
+        raise ValidationError('File too large. Size should not exceed 50 MB.')
 
 
 class Portfolio(models.Model):
@@ -97,7 +111,8 @@ class CreativeWork(models.Model):
     description = models.TextField()
     work_type = models.CharField(max_length=50, choices=WORK_TYPE_CHOICES)
 
-    file = models.FileField(upload_to='creative_works/')
+    file = models.FileField(upload_to='creative_works/',
+                            validators=[validate_file_size])
     thumbnail = models.ImageField(
         upload_to='thumbnails/', blank=True, null=True)
 
@@ -117,6 +132,43 @@ class CreativeWork(models.Model):
 
     def __str__(self):
         return self.title
+
+    def save(self, *args, **kwargs):
+        # Auto-generate thumbnail if a file is uploaded but no thumbnail exists
+        if self.file and not self.thumbnail:
+            try:
+                # Open the uploaded file using Pillow
+                img = Image.open(self.file)
+
+                # Convert to RGB to avoid issues with saving as JPEG (e.g., if original is PNG with transparency)
+                if img.mode != 'RGB':
+                    img = img.convert('RGB')
+
+                # Create the thumbnail (Pillow modifies the image in-place to max 400x400)
+                img.thumbnail((400, 400))
+
+                # Save the thumbnail to a BytesIO buffer
+                thumb_io = BytesIO()
+                img.save(thumb_io, format='JPEG', quality=85)
+
+                # Construct a new filename for the thumbnail
+                filename = os.path.basename(self.file.name)
+                name, _ = os.path.splitext(filename)
+                thumb_filename = f"{name}_thumb.jpg"
+
+                # Save the buffer content to the thumbnail field
+                self.thumbnail.save(thumb_filename, ContentFile(
+                    thumb_io.getvalue()), save=False)
+            except Exception as e:
+                # If it's not an image (e.g., PDF, audio) or corrupted, safely skip generation
+                logging.getLogger(__name__).warning(
+                    'Could not generate thumbnail for %s: %s', self.file.name, e)
+            finally:
+                # Reset the file pointer in case Django needs to read it again during the actual save
+                if self.file and hasattr(self.file, 'seek'):
+                    self.file.seek(0)
+
+        super().save(*args, **kwargs)
 
 
 class Collaboration(models.Model):
@@ -318,6 +370,34 @@ class MentorshipRequest(models.Model):
 
     def __str__(self):
         return f"{self.mentee.username} → {self.mentor.username}: {self.title}"
+
+
+class AuditLog(models.Model):
+    """Immutable record of system transactions and state changes"""
+    ACTION_CHOICES = (
+        ('status_change', 'Status Change'),
+        ('approval', 'Approval'),
+        ('rejection', 'Rejection'),
+        ('creation', 'Creation'),
+        ('other', 'Other'),
+    )
+
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='audit_logs')
+    action = models.CharField(max_length=50, choices=ACTION_CHOICES)
+    entity_type = models.CharField(
+        max_length=50, help_text="Model name, e.g., Project, Collaboration")
+    entity_id = models.PositiveIntegerField()
+    details = models.TextField(help_text="JSON or text details of the change")
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.actor} performed {self.action} on {self.entity_type} {self.entity_id}"
 
 
 @receiver(m2m_changed, sender=CreativeWork.liked_by.through)

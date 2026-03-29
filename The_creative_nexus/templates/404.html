@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Page Not Found - The Creative Nexus{% endblock %}
+
+{% block content %}
+<section style="padding: var(--space-4xl) 0; min-height: calc(100vh - 300px); display: flex; align-items: center;">
+    <div class="container-premium">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5 text-center">
+                <div style="width: 100px; height: 100px; background: #F5F5F5; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-lg);">
+                    <i data-lucide="map-pin-off" style="width: 50px; height: 50px; color: var(--color-text-muted);"></i>
+                </div>
+                
+                <h1 style="font-size: 80px; font-weight: 700; color: var(--color-primary); line-height: 1; margin-bottom: var(--space-xs);">404</h1>
+                <h3 style="font-weight: 600; margin-bottom: var(--space-md);">Page Not Found</h3>
+                
+                <p style="color: var(--color-text-muted); margin-bottom: var(--space-xl); font-size: 16px;">
+                    The page you're looking for doesn't exist, has been removed, or is temporarily unavailable.
+                </p>
+                
+                <a href="{% url 'home' %}" class="btn btn-primary btn-lg" style="font-weight: 500; border-radius: var(--radius-md); padding: var(--space-md) var(--space-xl);">
+                    <i data-lucide="home" style="width: 18px; height: 18px; margin-right: 8px;"></i>
+                    Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
