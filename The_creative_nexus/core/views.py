@@ -276,6 +276,14 @@ class NotificationViewSet(viewsets.ModelViewSet):
         notification.save()
         return Response(NotificationSerializer(notification).data)
 
+    @action(detail=False, methods=['post'])
+    def mark_all_read(self, request):
+        """Mark all notifications for the current user as read"""
+        qs = Notification.objects.filter(recipient=request.user, is_read=False)
+        count = qs.count()
+        qs.update(is_read=True, read_at=timezone.now())
+        return Response({'marked': count})
+
     @action(detail=False, methods=['get'])
     def unread_count(self, request):
         """Get count of unread notifications"""

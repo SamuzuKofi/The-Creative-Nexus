@@ -1,0 +1,9 @@
+{{ notification.title }}
+
+Hello {{ recipient.get_full_name|default:recipient.username }},
+
+{{ notification.message }}
+
+Open the app to view and manage your notifications.
+
+{{ site_name }}

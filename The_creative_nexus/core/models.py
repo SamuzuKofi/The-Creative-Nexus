@@ -4,6 +4,12 @@ from django.utils import timezone
 from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
 from django.db.models import Sum
+from django.db.models.signals import post_save
+from django.core.mail import EmailMultiAlternatives
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+import logging
+from django.conf import settings
 
 # Status choices for various models
 PROJECT_STATUS_CHOICES = (
@@ -220,6 +226,33 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.recipient.username}"
+
+
+@receiver(post_save, sender=Notification)
+def send_notification_email(sender, instance, created, **kwargs):
+    """Send an email to recipient when a new notification is created.
+    """
+    if not created:
+        return
+
+    try:
+        recipient = instance.recipient
+        if recipient and getattr(recipient, 'email', None):
+            from_email = getattr(
+                settings, 'DEFAULT_FROM_EMAIL', 'sedemkofiamuzu@gmail.com')
+            subject = instance.title or 'Notification from The Creative Nexus'
+            message = instance.message or ''
+
+            send_mail(
+                subject,
+                message,
+                from_email,
+                [recipient.email],
+                fail_silently=False  # Set to False so you can see auth errors in the console
+            )
+    except Exception as e:
+        logging.getLogger(__name__).exception(
+            'Failed to send notification email: %s', e)
 
 
 class Rating(models.Model):

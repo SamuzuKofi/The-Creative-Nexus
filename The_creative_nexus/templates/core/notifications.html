@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications - The Creative Nexus{% endblock %}
+
+{% block content %}
+<section style="padding: var(--space-3xl) 0;">
+    <div class="container-premium">
+        <div class="card">
+            <div class="card-header" style="display:flex; align-items:center; gap:var(--space-sm); justify-content:space-between;">
+                    <div style="display:flex; align-items:center; gap:var(--space-sm);">
+                        <i data-lucide="bell" style="width:18px; height:18px;"></i>
+                        <h5 style="margin:0;">Notifications</h5>
+                    </div>
+                    <div>
+                        <button id="markAllReadBtn" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#confirmMarkAllModal">Mark all read</button>
+                    </div>
+                </div>
+            <div class="card-body">
+                {% if notifications %}
+                    <div id="notificationsList">
+                        {% for n in notifications %}
+                            <div class="notification-item" data-id="{{ n.id }}" style="padding: var(--space-md); border-bottom:1px solid var(--color-border-light); display:flex; justify-content:space-between; align-items:center;">
+                                <div>
+                                    <strong style="display:block;">{{ n.title }}</strong>
+                                    <div style="font-size:0.9rem; color:var(--color-text-muted);">{{ n.message }}</div>
+                                    <small style="color:var(--color-text-muted);">{{ n.created_at }}</small>
+                                </div>
+                                <div style="display:flex; gap:var(--space-sm);">
+                                    <button class="btn btn-sm btn-outline-danger delete-notification">Delete</button>
+                                    {% if not n.is_read %}
+                                        <button class="btn btn-sm btn-outline-primary mark-read">Mark read</button>
+                                    {% else %}
+                                        <span class="badge badge-secondary">Read</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p>No notifications yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.mark-read').forEach(btn => {
+        btn.addEventListener('click', async function(ev) {
+            const wrapper = ev.target.closest('.notification-item');
+            const id = wrapper.dataset.id;
+            const csrf = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+            try {
+                const res = await fetch(`/api/core/notifications/${id}/mark_as_read/`, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'X-CSRFToken': csrf }
+                });
+                if (res.ok) {
+                    // update UI
+                    wrapper.querySelector('.mark-read')?.remove();
+                    const badge = document.createElement('span');
+                    badge.className = 'badge badge-secondary';
+                    badge.textContent = 'Read';
+                    wrapper.querySelector('div:last-child')?.appendChild(badge);
+                } else {
+                    console.error('Failed to mark notification read', await res.text());
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        });
+    });
+
+    // Delete notification
+    document.querySelectorAll('.delete-notification').forEach(btn => {
+        btn.addEventListener('click', async function(ev) {
+            const wrapper = ev.target.closest('.notification-item');
+            const id = wrapper.dataset.id;
+            const csrf = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+            if (!confirm('Delete this notification?')) return;
+            try {
+                const res = await fetch(`/api/core/notifications/${id}/`, {
+                    method: 'DELETE',
+                    credentials: 'same-origin',
+                    headers: { 'X-CSRFToken': csrf }
+                });
+                if (res.ok || res.status === 204) {
+                    wrapper.remove();
+                } else {
+                    console.error('Failed to delete notification', await res.text());
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        });
+    });
+
+    // Mark all read
+    const confirmMarkAllBtn = document.getElementById('confirmMarkAllBtn');
+    confirmMarkAllBtn?.addEventListener('click', async function() {
+        const csrf = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        try {
+            const res = await fetch('/api/core/notifications/mark_all_read/', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'X-CSRFToken': csrf }
+            });
+            if (res.ok) {
+                const modalEl = document.getElementById('confirmMarkAllModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                modal.hide();
+                location.reload();
+            } else {
+                console.error('Failed to mark all read', await res.text());
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    });
+});
+</script>
+
+{% endblock %}
+
+<!-- Confirm Mark All Modal -->
+<div class="modal fade" id="confirmMarkAllModal" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Mark all notifications as read?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button id="confirmMarkAllBtn" type="button" class="btn btn-primary">Yes, mark all</button>
+            </div>
+        </div>
+    </div>
+</div>

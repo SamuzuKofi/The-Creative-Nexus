@@ -11,7 +11,8 @@ from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from core.template_views import (
     home, dashboard, portfolio_view, profile_view, collaborations_view,
-    explore_view, register_view, login_view, logout_view, verify_email_view
+    explore_view, register_view, login_view, logout_view, verify_email_view,
+    notifications_view, projects_view, project_detail
 )
 
 urlpatterns = [
@@ -25,6 +26,9 @@ urlpatterns = [
     path('profile/', profile_view, name='profile'),
     path('collaborations/', collaborations_view, name='collaborations'),
     path('explore/', explore_view, name='explore'),
+    path('notifications/', notifications_view, name='notifications'),
+    path('projects/', projects_view, name='projects'),
+    path('projects/<int:project_id>/', project_detail, name='project-detail'),
     path('register/', register_view, name='register'),
     path('login/', login_view, name='login'),
     path('logout/', logout_view, name='logout'),

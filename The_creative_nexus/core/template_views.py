@@ -245,6 +245,43 @@ def register_view(request):
     return render(request, 'accounts/register.html')
 
 
+@login_required(login_url='login')
+def notifications_view(request):
+    """Notification center page for the user"""
+    user = request.user
+    notifications = Notification.objects.filter(recipient=user).order_by('-created_at')
+    context = {'notifications': notifications}
+    return render(request, 'core/notifications.html', context)
+
+
+@login_required(login_url='login')
+def projects_view(request):
+    """List projects for current user and quick actions"""
+    user = request.user
+    projects = Project.objects.filter(Q(created_by=user) | Q(team_members=user)).distinct()
+    context = {'projects': projects}
+    return render(request, 'core/projects.html', context)
+
+
+@login_required(login_url='login')
+def project_detail(request, project_id):
+    """Detailed project view with status updates and member management"""
+    try:
+        project = Project.objects.get(id=project_id)
+    except Project.DoesNotExist:
+        from django.http import Http404
+        raise Http404('Project not found')
+
+    # Ensure user can view the project
+    user = request.user
+    if not (project.created_by == user or user in project.team_members.all()):
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden('You do not have access to this project')
+
+    context = {'project': project}
+    return render(request, 'core/project_detail.html', context)
+
+
 def login_view(request):
     """Login page (API-driven)"""
     if request.user.is_authenticated:

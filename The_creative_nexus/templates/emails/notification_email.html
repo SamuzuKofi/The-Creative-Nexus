@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ notification.title }}</title>
+    <style>
+      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; color:#222; }
+      .card { border:1px solid #e6e6e6; border-radius:8px; padding:18px; }
+      .btn { display:inline-block; padding:10px 14px; background:#0095F6; color:#fff; border-radius:6px; text-decoration:none; }
+      .muted { color:#666; font-size:13px; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h2 style="margin-top:0;">{{ notification.title }}</h2>
+      <p class="muted">Hello {{ recipient.get_full_name|default:recipient.username }},</p>
+      <p>{{ notification.message }}</p>
+      <p style="margin-top:18px;">You can view your notifications in the app to take action.</p>
+      <p><a href="{{ notification.get_absolute_url|default:'#' }}" class="btn">View Notification</a></p>
+      <hr/>
+      <p class="muted">{{ site_name }} — Stay creative.</p>
+    </div>
+  </body>
+</html>

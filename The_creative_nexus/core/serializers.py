@@ -68,7 +68,7 @@ class CollaborationDetailSerializer(serializers.ModelSerializer):
             'title', 'description', 'status', 'status_display', 'required_skills',
             'timeline', 'budget_range', 'created_at', 'updated_at', 'responded_at'
         )
-        read_only_fields = ('id', 'created_at', 'updated_at', 'responded_at')
+        read_only_fields = ('id', 'creator', 'created_at', 'updated_at', 'responded_at')
 
 
 class ProjectSerializer(serializers.ModelSerializer):
