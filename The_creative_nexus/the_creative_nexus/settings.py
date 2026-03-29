@@ -33,6 +33,10 @@ DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 ALLOWED_HOSTS = os.environ.get(
     'ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
+# Automatically add Render's external hostname to ALLOWED_HOSTS
+render_external_hostname = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if render_external_hostname:
+    ALLOWED_HOSTS.append(render_external_hostname)
 
 # Application definition
 
