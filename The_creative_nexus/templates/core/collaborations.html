@@ -3,122 +3,156 @@
 {% block title %}Collaborations - The Creative Nexus{% endblock %}
 
 {% block content %}
-<div class="container-lg py-5">
-    <h1 class="mb-4"><i class="fas fa-handshake"></i> My Collaborations</h1>
-
-    <!-- Tabs -->
-    <ul class="nav nav-tabs mb-4" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="sent-tab" data-bs-toggle="tab" data-bs-target="#sent" type="button" role="tab">
-                <i class="fas fa-paper-plane"></i> Sent ({{ sent.count }})
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="received-tab" data-bs-toggle="tab" data-bs-target="#received" type="button" role="tab">
-                <i class="fas fa-inbox"></i> Received ({{ received.count }})
-            </button>
-        </li>
-    </ul>
-
-    <div class="tab-content">
-        <!-- Sent Collaborations -->
-        <div class="tab-pane fade show active" id="sent" role="tabpanel">
-            {% if sent %}
-                <div class="row">
-                    {% for collab in sent %}
-                        <div class="col-md-6 mb-3">
-                            <div class="card h-100">
-                                <div class="card-body">
-                                    <h5 class="card-title">{{ collab.title }}</h5>
-                                    <p class="card-text text-muted small mb-2">To: <strong>{{ collab.collaborator.username }}</strong></p>
-                                    <p class="card-text">{{ collab.description|truncatewords:20 }}</p>
-                                    
-                                    {% if collab.status == 'pending' %}
-                                        <div class="alert alert-warning py-2 small mb-0">
-                                            <i class="fas fa-hourglass-end"></i> Awaiting response
-                                        </div>
-                                    {% elif collab.status == 'accepted' %}
-                                        <div class="alert alert-success py-2 small mb-0">
-                                            <i class="fas fa-check-circle"></i> Accepted!
-                                        </div>
-                                    {% else %}
-                                        <div class="alert alert-danger py-2 small mb-0">
-                                            <i class="fas fa-times-circle"></i> {{ collab.get_status_display }}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                <div class="card-footer bg-light">
-                                    <small class="text-muted">{{ collab.created_at|date:"M d, Y" }}</small>
-                                </div>
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="alert alert-info text-center py-5">
-                    <i class="fas fa-inbox" style="font-size: 2rem;"></i>
-                    <p class="mt-3">You haven't sent any collaboration requests yet.</p>
-                    <a href="{% url 'explore' %}" class="btn btn-primary">Find Creators to Collaborate With</a>
-                </div>
-            {% endif %}
+<section style="padding: var(--space-3xl) 0;">
+    <div class="container-premium">
+        <div style="display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-2xl);">
+            <i data-lucide="handshake" style="width: 32px; height: 32px; color: var(--color-primary);"></i>
+            <h1 style="margin: 0; font-size: 32px;">My Collaborations</h1>
         </div>
 
-        <!-- Received Collaborations -->
-        <div class="tab-pane fade" id="received" role="tabpanel">
-            {% if received %}
-                <div class="row">
-                    {% for collab in received %}
-                        <div class="col-md-6 mb-3">
-                            <div class="card h-100">
-                                <div class="card-body">
-                                    <h5 class="card-title">{{ collab.title }}</h5>
-                                    <p class="card-text text-muted small mb-2">From: <strong>{{ collab.creator.username }}</strong></p>
-                                    <p class="card-text">{{ collab.description|truncatewords:20 }}</p>
-                                    
-                                    {% if collab.required_skills %}
-                                        <p class="small mb-2"><strong>Required Skills:</strong> {{ collab.required_skills }}</p>
-                                    {% endif %}
-                                    
-                                    {% if collab.status == 'pending' %}
-                                        <div class="alert alert-warning py-2 small">
-                                            <i class="fas fa-hourglass-end"></i> Waiting for your response
-                                        </div>
-                                        <div class="btn-group w-100">
-                                            <button class="btn btn-success btn-sm accept-btn" data-id="{{ collab.id }}">
-                                                <i class="fas fa-check"></i> Accept
-                                            </button>
-                                            <button class="btn btn-danger btn-sm reject-btn" data-id="{{ collab.id }}">
-                                                <i class="fas fa-times"></i> Reject
-                                            </button>
-                                        </div>
-                                    {% elif collab.status == 'accepted' %}
-                                        <div class="alert alert-success py-2 small">
-                                            <i class="fas fa-check-circle"></i> You accepted this request
-                                        </div>
-                                    {% else %}
-                                        <div class="alert alert-danger py-2 small">
-                                            <i class="fas fa-times-circle"></i> {{ collab.get_status_display }}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                <div class="card-footer bg-light">
-                                    <small class="text-muted">{{ collab.created_at|date:"M d, Y" }}</small>
+        <!-- Tabs -->
+        <div class="card" style="margin-bottom: var(--space-2xl);">
+            <div style="display: flex; border-bottom: 1px solid var(--color-border);">
+                <button class="tab-btn active" data-tab="sent" style="flex: 1; padding: var(--space-lg); border: none; background: transparent; cursor: pointer; font-weight: 600; color: var(--color-text-muted); border-bottom: 2px solid transparent; transition: all 0.2s;">
+                    <i data-lucide="send" style="width: 16px; height: 16px; display: inline; margin-right: var(--space-sm); vertical-align: text-bottom;"></i>
+                    Sent ({{ sent.count }})
+                </button>
+                <button class="tab-btn" data-tab="received" style="flex: 1; padding: var(--space-lg); border: none; background: transparent; cursor: pointer; font-weight: 600; color: var(--color-text-muted); border-bottom: 2px solid transparent; transition: all 0.2s;">
+                    <i data-lucide="inbox" style="width: 16px; height: 16px; display: inline; margin-right: var(--space-sm); vertical-align: text-bottom;"></i>
+                    Received ({{ received.count }})
+                </button>
+            </div>
+
+            <!-- Sent Collaborations -->
+            <div id="sent" class="tab-content" style="padding: var(--space-lg);">
+                {% if sent %}
+                    <div class="row" style="--bs-gutter-x: var(--space-xl); --bs-gutter-y: var(--space-xl);">
+                        {% for collab in sent %}
+                            <div class="col-md-6">
+                                <div class="card" style="height: 100%;">
+                                    <div class="card-body" style="padding: var(--space-lg); display: flex; flex-direction: column;">
+                                        <h5 class="card-title" style="margin-bottom: var(--space-sm); color: var(--color-primary);">{{ collab.title }}</h5>
+                                        <p class="card-text" style="font-size: 13px; color: var(--color-text-muted); margin-bottom: var(--space-md);">To: <strong>{{ collab.collaborator.username }}</strong></p>
+                                        <p class="card-text" style="font-size: 14px; margin-bottom: var(--space-md); flex-grow: 1;">{{ collab.description|truncatewords:25 }}</p>
+                                        
+                                        {% if collab.status == 'pending' %}
+                                            <div class="alert alert-warning d-flex align-items-center gap-2" style="margin: 0; padding: var(--space-sm) var(--space-md); font-size: 13px;">
+                                                <i data-lucide="clock" style="width: 16px; height: 16px; flex-shrink: 0;"></i>
+                                                Awaiting response
+                                            </div>
+                                        {% elif collab.status == 'accepted' %}
+                                            <div class="alert alert-success d-flex align-items-center gap-2" style="margin: 0; padding: var(--space-sm) var(--space-md); font-size: 13px;">
+                                                <i data-lucide="check-circle" style="width: 16px; height: 16px; flex-shrink: 0;"></i>
+                                                Accepted!
+                                            </div>
+                                        {% else %}
+                                            <div class="alert alert-danger d-flex align-items-center gap-2" style="margin: 0; padding: var(--space-sm) var(--space-md); font-size: 13px;">
+                                                <i data-lucide="x-circle" style="width: 16px; height: 16px; flex-shrink: 0;"></i>
+                                                {{ collab.get_status_display }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div style="border-top: 1px solid var(--color-border); padding: var(--space-md) var(--space-lg); font-size: 12px; color: var(--color-text-muted);">
+                                        {{ collab.created_at|date:"M d, Y" }}
+                                    </div>
                                 </div>
                             </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div style="text-align: center; padding: var(--space-3xl) 0;">
+                        <div style="width: 100px; height: 100px; background: #F5F5F5; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-lg);">
+                            <i data-lucide="inbox" style="width: 50px; height: 50px; color: var(--color-text-muted);"></i>
                         </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="alert alert-info text-center py-5">
-                    <i class="fas fa-inbox" style="font-size: 2rem;"></i>
-                    <p class="mt-3">No collaboration requests yet. Build your portfolio to attract opportunities!</p>
-                </div>
-            {% endif %}
+                        <h3 style="color: var(--color-primary); margin: var(--space-md) 0; font-size: 20px;">No sent requests</h3>
+                        <p style="color: var(--color-text-muted); margin: 0 0 var(--space-lg);">You haven't sent any collaboration requests yet.</p>
+                        <a href="{% url 'explore' %}" class="btn btn-primary">
+                            <i data-lucide="compass" style="width: 16px; height: 16px;"></i>
+                            Find Creators to Collaborate With
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Received Collaborations -->
+            <div id="received" class="tab-content" style="padding: var(--space-lg); display: none;">
+                {% if received %}
+                    <div class="row" style="--bs-gutter-x: var(--space-xl); --bs-gutter-y: var(--space-xl);">
+                        {% for collab in received %}
+                            <div class="col-md-6">
+                                <div class="card" style="height: 100%;">
+                                    <div class="card-body" style="padding: var(--space-lg); display: flex; flex-direction: column;">
+                                        <h5 class="card-title" style="margin-bottom: var(--space-sm); color: var(--color-primary);">{{ collab.title }}</h5>
+                                        <p class="card-text" style="font-size: 13px; color: var(--color-text-muted); margin-bottom: var(--space-md);">From: <strong>{{ collab.creator.username }}</strong></p>
+                                        <p class="card-text" style="font-size: 14px; margin-bottom: var(--space-md); flex-grow: 1;">{{ collab.description|truncatewords:25 }}</p>
+                                        
+                                        {% if collab.required_skills %}
+                                            <p style="font-size: 12px; margin-bottom: var(--space-md); color: var(--color-text-muted);"><strong>Required Skills:</strong> {{ collab.required_skills }}</p>
+                                        {% endif %}
+                                        
+                                        {% if collab.status == 'pending' %}
+                                            <div class="alert alert-warning d-flex align-items-center gap-2" style="margin-bottom: var(--space-md); padding: var(--space-sm) var(--space-md); font-size: 13px;">
+                                                <i data-lucide="clock" style="width: 16px; height: 16px; flex-shrink: 0;"></i>
+                                                Waiting for your response
+                                            </div>
+                                            <div class="d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
+                                                <button class="btn btn-primary btn-sm accept-btn" data-id="{{ collab.id }}" style="font-size: 13px;">
+                                                    <i data-lucide="check" style="width: 14px; height: 14px;"></i> Accept
+                                                </button>
+                                                <button class="btn btn-secondary btn-sm reject-btn" data-id="{{ collab.id }}" style="font-size: 13px;">
+                                                    <i data-lucide="x" style="width: 14px; height: 14px;"></i> Reject
+                                                </button>
+                                            </div>
+                                        {% elif collab.status == 'accepted' %}
+                                            <div class="alert alert-success d-flex align-items-center gap-2" style="margin: 0; padding: var(--space-sm) var(--space-md); font-size: 13px;">
+                                                <i data-lucide="check-circle" style="width: 16px; height: 16px; flex-shrink: 0;"></i>
+                                                You accepted this request
+                                            </div>
+                                        {% else %}
+                                            <div class="alert alert-danger d-flex align-items-center gap-2" style="margin: 0; padding: var(--space-sm) var(--space-md); font-size: 13px;">
+                                                <i data-lucide="x-circle" style="width: 16px; height: 16px; flex-shrink: 0;"></i>
+                                                {{ collab.get_status_display }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div style="border-top: 1px solid var(--color-border); padding: var(--space-md) var(--space-lg); font-size: 12px; color: var(--color-text-muted);">
+                                        {{ collab.created_at|date:"M d, Y" }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div style="text-align: center; padding: var(--space-3xl) 0;">
+                        <div style="width: 100px; height: 100px; background: #F5F5F5; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-lg);">
+                            <i data-lucide="inbox" style="width: 50px; height: 50px; color: var(--color-text-muted);"></i>
+                        </div>
+                        <h3 style="color: var(--color-primary); margin: var(--space-md) 0; font-size: 20px;">No requests received yet</h3>
+                        <p style="color: var(--color-text-muted); margin: 0;">Build your portfolio to attract collaboration opportunities!</p>
+                    </div>
+                {% endif %}
+            </div>
         </div>
     </div>
-</div>
+</section>
 
 <script>
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.tab-btn').forEach(b => {
+            b.style.borderBottom = 'none';
+            b.style.color = 'var(--color-text-muted)';
+        });
+        this.style.borderBottom = '2px solid var(--color-accent)';
+        this.style.color = 'var(--color-primary)';
+        
+        document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+        document.getElementById(this.dataset.tab).style.display = 'block';
+    });
+});
+
+// Accept collaboration
 document.querySelectorAll('.accept-btn').forEach(btn => {
     btn.addEventListener('click', async function() {
         const collabId = this.dataset.id;
@@ -131,6 +165,8 @@ document.querySelectorAll('.accept-btn').forEach(btn => {
             });
             if (response.ok) {
                 window.location.reload();
+            } else {
+                alert('Error accepting collaboration');
             }
         } catch (error) {
             console.error('Error:', error);
@@ -139,6 +175,7 @@ document.querySelectorAll('.accept-btn').forEach(btn => {
     });
 });
 
+// Reject collaboration
 document.querySelectorAll('.reject-btn').forEach(btn => {
     btn.addEventListener('click', async function() {
         const collabId = this.dataset.id;
@@ -148,6 +185,22 @@ document.querySelectorAll('.reject-btn').forEach(btn => {
                     method: 'POST',
                     headers: {
                         'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                });
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert('Error rejecting collaboration');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error rejecting collaboration');
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
                     }
                 });
                 if (response.ok) {

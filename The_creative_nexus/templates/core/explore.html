@@ -5,20 +5,20 @@
 {% block content %}
 <section style="padding: var(--space-3xl) 0;">
     <div class="container-premium">
-        <div class="section-header">
-            <h2>Explore Creators</h2>
-            <p>Discover talented professionals across Ghana</p>
+        <div class="section-header" style="margin-bottom: var(--space-2xl);">
+            <h2 style="margin-bottom: var(--space-md);">Discover Creators</h2>
+            <p style="color: var(--color-text-muted); font-size: 16px;">Find talented professionals to collaborate with</p>
         </div>
 
-        <!-- Filters -->
-        <div class="card" style="margin-bottom: var(--space-2xl);">
-            <div class="card-body">
+        <!-- Filters Card -->
+        <div class="card" style="margin-bottom: var(--space-2xl); border-radius: var(--radius-lg);">
+            <div class="card-body" style="padding: var(--space-xl);">
                 <form method="get">
-                    <div class="row g-3">
-                        <div class="col-md-5">
-                            <label class="form-label">Search</label>
+                    <div class="row" style="--bs-gutter-x: var(--space-md); --bs-gutter-y: var(--space-md);">
+                        <div class="col-md-6">
+                            <label class="form-label">Search creators</label>
                             <div style="position: relative;">
-                                <i data-lucide="search" style="position: absolute; left: var(--space-md); top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--color-text-muted);"></i>
+                                <i data-lucide="search" style="position: absolute; left: var(--space-md); top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--color-text-muted);"></i>
                                 <input type="text" class="form-control" name="search" placeholder="Name, skills, or location..." value="{{ search }}" style="padding-left: 2.5rem;">
                             </div>
                         </div>
@@ -31,11 +31,9 @@
                                 <option value="client" {% if selected_role == 'client' %}selected{% endif %}>Clients</option>
                             </select>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label">&nbsp;</label>
+                        <div class="col-md-2" style="display: flex; align-items: flex-end;">
                             <button type="submit" class="btn btn-primary w-100">
-                                <i data-lucide="search" style="width: 18px; height: 18px;"></i>
-                                Search
+                                <i data-lucide="search" style="width: 16px; height: 16px;"></i>
                             </button>
                         </div>
                     </div>
@@ -45,52 +43,57 @@
 
         <!-- Profiles Grid -->
         {% if profiles %}
-            <div class="row" style="--bs-gutter-y: var(--space-lg);">
+            <div class="row" style="--bs-gutter-x: var(--space-xl); --bs-gutter-y: var(--space-xl);">
                 {% for profile in profiles %}
                     <div class="col-md-6 col-lg-4">
-                        <div class="card h-100">
-                            <div class="card-body" style="padding: var(--space-xl); text-align: center;">
+                        <div class="card" style="height: 100%; display: flex; flex-direction: column;">
+                            <div class="card-body" style="padding: var(--space-xl); text-align: center; flex: 1; display: flex; flex-direction: column;">
                                 <!-- Profile Picture -->
                                 {% if profile.profile_picture %}
-                                    <img src="{{ profile.profile_picture.url }}" alt="{{ profile.user.username }}" class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover; border: 3px solid var(--color-accent);">
+                                    <img src="{{ profile.profile_picture.url }}" alt="{{ profile.user.username }}" class="rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover; border: 2px solid var(--color-border); margin: 0 auto;">
                                 {% else %}
-                                    <div class="mb-3" style="width: 100px; height: 100px; background: linear-gradient(135deg, var(--color-border-light), var(--color-border)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
-                                        <i data-lucide="user" style="width: 40px; height: 40px; color: var(--color-text-muted);"></i>
+                                    <div class="mb-3" style="width: 120px; height: 120px; background: #F5F5F5; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                                        <i data-lucide="user" style="width: 50px; height: 50px; color: var(--color-text-muted);"></i>
                                     </div>
                                 {% endif %}
 
-                                <h5 style="margin-bottom: var(--space-xs);">{{ profile.user.get_full_name|default:profile.user.username }}</h5>
+                                <h5 style="margin: var(--space-md) 0 var(--space-sm); color: var(--color-primary); font-weight: 600;">{{ profile.user.get_full_name|default:profile.user.username }}</h5>
                                 <span class="badge badge-accent" style="margin-bottom: var(--space-md);">{{ profile.get_role_display }}</span>
 
                                 {% if profile.location %}
-                                    <p style="font-size: 0.9rem; margin-bottom: var(--space-sm);">
-                                        <i data-lucide="map-pin" style="width: 14px; height: 14px; display: inline; vertical-align: middle;"></i>
+                                    <p style="font-size: 13px; margin-bottom: var(--space-sm); color: var(--color-text-muted);">
+                                        <i data-lucide="map-pin" style="width: 14px; height: 14px; display: inline; vertical-align: text-bottom; margin-right: 4px;"></i>
                                         {{ profile.location }}
                                     </p>
                                 {% endif %}
 
                                 {% if profile.bio %}
-                                    <p style="font-size: 0.9rem; margin-bottom: var(--space-md);">{{ profile.bio|truncatewords:12 }}</p>
+                                    <p style="font-size: 13px; margin-bottom: var(--space-md); color: var(--color-text-muted); flex-grow: 1;">{{ profile.bio|truncatewords:15 }}</p>
                                 {% endif %}
 
                                 {% if profile.skills_list %}
-                                    <div style="margin-bottom: var(--space-md);">
-                                        {% for skill in profile.skills_list|slice:":4" %}
+                                    <div style="margin-bottom: var(--space-lg); margin-top: auto;">
+                                        {% for skill in profile.skills_list|slice:":3" %}
                                             <span class="badge badge-secondary" style="margin: 2px;">{{ skill }}</span>
                                         {% endfor %}
                                     </div>
                                 {% endif %}
 
                                 <div class="d-grid gap-2">
-                                    <a href="{% url 'view-portfolio' user_id=profile.user.id %}" class="btn btn-secondary btn-sm">
-                                        <i data-lucide="eye" style="width: 16px; height: 16px;"></i>
+                                    <a href="{% url 'view-portfolio' user_id=profile.user.id %}" class="btn btn-secondary btn-sm" style="font-size: 13px;">
+                                        <i data-lucide="eye" style="width: 14px; height: 14px;"></i>
                                         View Portfolio
                                     </a>
                                     {% if user.is_authenticated and profile.user != user %}
-                                        <a href="#" class="btn btn-primary btn-sm" onclick="openCollaborationModal({{ profile.user.id }}, '{{ profile.user.username }}')">
-                                            <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
+                                        <button type="button" class="btn btn-primary btn-sm" onclick="openCollaborationModal({{ profile.user.id }}, '{{ profile.user.username }}')" style="font-size: 13px;">
+                                            <i data-lucide="message-square" style="width: 14px; height: 14px;"></i>
                                             Collaborate
-                                        </a>
+                                            Request Mentor
+                                        </button>
+                                        <button type="button" class="btn btn-sm" onclick="openMentorshipModal({{ profile.user.id }}, '{{ profile.user.username }}')" style="font-size: 13px; background: var(--color-accent-light); border: 1px solid var(--color-border); color: var(--color-accent); font-weight: 500; padding: var(--space-sm) var(--space-md); width: 100%;">
+                                            <i data-lucide="book-open" style="width: 14px; height: 14px;"></i>
+                                            Request Mentor
+                                        </button>
                                     {% endif %}
                                 </div>
                             </div>
@@ -99,12 +102,12 @@
                 {% endfor %}
             </div>
         {% else %}
-            <div class="text-center py-5">
-                <div style="width: 80px; height: 80px; background: var(--color-border-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-lg);">
-                    <i data-lucide="search-x" style="width: 40px; height: 40px; color: var(--color-text-muted);"></i>
+            <div style="text-align: center; padding: var(--space-3xl) 0;">
+                <div style="width: 100px; height: 100px; background: #F5F5F5; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-lg);">
+                    <i data-lucide="search" style="width: 50px; height: 50px; color: var(--color-text-muted);"></i>
                 </div>
-                <h4 style="margin-bottom: var(--space-sm);">No creators found</h4>
-                <p>Try adjusting your search filters to find what you're looking for.</p>
+                <h3 style="margin: var(--space-md) 0; color: var(--color-primary); font-size: 20px;">No creators found</h3>
+                <p style="color: var(--color-text-muted); margin: 0;">Try adjusting your search filters to discover amazing creators.</p>
             </div>
         {% endif %}
     </div>
@@ -113,52 +116,106 @@
 <!-- Collaboration Modal -->
 <div class="modal fade" id="collaborationModal" tabindex="-1">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Send Collaboration Request</h5>
+        <div class="modal-content" style="border-radius: var(--radius-lg);">
+            <div class="modal-header" style="border-bottom: 1px solid var(--color-border); padding: var(--space-lg);">
+                <h5 class="modal-title" style="font-weight: 600;">Send Collaboration Request</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="collaborationForm">
-                <div class="modal-body">
+                <div class="modal-body" style="padding: var(--space-lg);">
                     <input type="hidden" id="collaboratorId">
                     
                     <div class="mb-3">
-                        <label class="form-label">To:</label>
-                        <p id="collaboratorName" style="margin: 0; font-weight: 600;"></p>
+                        <label style=" font-weight: 600; font-size: 13px; color: var(--color-text-muted);">TO</label>
+                        <p id="collaboratorName" style="margin: var(--space-sm) 0 0; font-weight: 600; font-size: 16px; color: var(--color-primary);"></p>
                     </div>
 
-                    <div class="mb-3">
+                    <div class="mb-4" style="border-top: 1px solid var(--color-border); padding-top: var(--space-lg); margin-top: var(--space-lg);">
                         <label for="collabTitle" class="form-label">Project Title</label>
                         <input type="text" class="form-control" id="collabTitle" name="title" required>
                     </div>
 
-                    <div class="mb-3">
+                    <div class="mb-4">
                         <label for="collabDesc" class="form-label">Description</label>
-                        <textarea class="form-control" id="collabDesc" name="description" rows="3" required></textarea>
+                        <textarea class="form-control" id="collabDesc" name="description" rows="3" required style="resize: vertical;"></textarea>
                     </div>
 
-                    <div class="mb-3">
+                    <div class="mb-4">
                         <label for="requiredSkills" class="form-label">Required Skills</label>
                         <input type="text" class="form-control" id="requiredSkills" name="required_skills" placeholder="e.g., 3D Modeling, Animation">
                     </div>
 
-                    <div class="mb-3">
+                    <div class="mb-4">
                         <label for="timeline" class="form-label">Timeline</label>
                         <input type="text" class="form-control" id="timeline" name="timeline" placeholder="e.g., 2 months">
                     </div>
 
-                    <div class="mb-3">
+                    <div class="mb-4">
                         <label for="budget" class="form-label">Budget Range</label>
                         <input type="text" class="form-control" id="budget" name="budget_range" placeholder="e.g., $500 - $1000">
                     </div>
 
                     <div id="collabError" class="alert alert-danger d-none"></div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer" style="border-top: 1px solid var(--color-border); padding: var(--space-lg);">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">
-                        <i data-lucide="send" style="width: 16px; height: 16px;"></i>
-                        Send Request
+                        <i data-lucide="send" style="width: 14px; height: 14px;"></i> Send
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Mentorship Modal -->
+<div class="modal fade" id="mentorshipModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content" style="border-radius: var(--radius-lg);">
+            <div class="modal-header" style="border-bottom: 1px solid var(--color-border); padding: var(--space-lg);">
+                <h5 class="modal-title" style="font-weight: 600;">Request Mentorship</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="mentorshipForm">
+                <div class="modal-body" style="padding: var(--space-lg);">
+                    <input type="hidden" id="mentorId">
+                    
+                    <div class="mb-3">
+                        <label style="font-weight: 600; font-size: 13px; color: var(--color-text-muted);">MENTOR</label>
+                        <p id="mentorName" style="margin: var(--space-sm) 0 0; font-weight: 600; font-size: 16px; color: var(--color-primary);"></p>
+                    </div>
+
+                    <div class="mb-4" style="border-top: 1px solid var(--color-border); padding-top: var(--space-lg); margin-top: var(--space-lg);">
+                        <label for="mentorshipTitle" class="form-label">Request Title</label>
+                        <input type="text" class="form-control" id="mentorshipTitle" name="title" placeholder="e.g., Learn UI/UX Design" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="mentorshipDesc" class="form-label">Tell them about your goals</label>
+                        <textarea class="form-control" id="mentorshipDesc" name="description" rows="3" placeholder="What do you want to learn from them?" required style="resize: vertical;"></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="skillsToLearn" class="form-label">Skills you want to learn</label>
+                        <input type="text" class="form-control" id="skillsToLearn" name="skills_to_learn" placeholder="e.g., Figma, Web Design, Branding">
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="experienceLevel" class="form-label">Your Experience Level</label>
+                        <select class="form-select" id="experienceLevel" name="experience_level" required>
+                            <option value="">Select your level...</option>
+                            <option value="beginner">Beginner</option>
+                            <option value="intermediate">Intermediate</option>
+                            <option value="advanced">Advanced</option>
+                        </select>
+                    </div>
+
+                    <div id="mentorshipError" class="alert alert-danger d-none"></div>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid var(--color-border); padding: var(--space-lg);">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i data-lucide="send" style="width: 14px; height: 14px;"></i> Send Request
                     </button>
                 </div>
             </form>
@@ -169,16 +226,18 @@
 <script>
 function openCollaborationModal(userId, username) {
     if (!{{ user.is_authenticated|lower }}) {
-        window.location.href = "{% url 'login' %}";
+        window.location.href = '{% url "login" %}';
         return;
     }
+    
     document.getElementById('collaboratorId').value = userId;
     document.getElementById('collaboratorName').textContent = username;
-    var modal = new bootstrap.Modal(document.getElementById('collaborationModal'));
-    modal.show();
+    document.getElementById('collaborationForm').reset();
+    document.getElementById('collabError').classList.add('d-none');
+    new bootstrap.Modal(document.getElementById('collaborationModal')).show();
 }
 
-document.getElementById('collaborationForm').addEventListener('submit', function(e) {
+document.getElementById('collaborationForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
     const formData = {
@@ -190,29 +249,80 @@ document.getElementById('collaborationForm').addEventListener('submit', function
         budget_range: document.getElementById('budget').value
     };
     
-    fetch('/api/core/collaborations/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-        },
-        body: JSON.stringify(formData)
-    })
-    .then(response =u003e {
+    try {
+        const response = await fetch('/api/core/collaborations/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify(formData)
+        });
+        
         if (response.ok) {
-            bootstrap.Modal.getInstance(document.getElementById('collaborationModal')).hide();
             alert('Collaboration request sent successfully!');
-            document.getElementById('collaborationForm').reset();
+            bootstrap.Modal.getInstance(document.getElementById('collaborationModal')).hide();
+            window.location.reload();
         } else {
-            return response.json().then(data =u003e {
-                throw new Error(data.detail || 'Failed to send request');
-            });
+            const data = await response.json();
+            document.getElementById('collabError').textContent = JSON.stringify(data);
+            document.getElementById('collabError').classList.remove('d-none');
         }
-    })
-    .catch(error =u003e {
-        document.getElementById('collabError').textContent = error.message;
+    } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('collabError').textContent = 'An error occurred. Please try again.';
         document.getElementById('collabError').classList.remove('d-none');
-    });
+    }
+});
+
+function openMentorshipModal(userId, username) {
+    if (!{{ user.is_authenticated|lower }}) {
+        window.location.href = '{% url "login" %}';
+        return;
+    }
+    
+    document.getElementById('mentorId').value = userId;
+    document.getElementById('mentorName').textContent = username;
+    document.getElementById('mentorshipForm').reset();
+    document.getElementById('mentorshipError').classList.add('d-none');
+    new bootstrap.Modal(document.getElementById('mentorshipModal')).show();
+}
+
+document.getElementById('mentorshipForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        mentor: document.getElementById('mentorId').value,
+        title: document.getElementById('mentorshipTitle').value,
+        description: document.getElementById('mentorshipDesc').value,
+        skills_to_learn: document.getElementById('skillsToLearn').value,
+        experience_level: document.getElementById('experienceLevel').value
+    };
+    
+    try {
+        const response = await fetch('/api/core/mentorship-requests/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        if (response.ok) {
+            alert('Mentorship request sent successfully!');
+            bootstrap.Modal.getInstance(document.getElementById('mentorshipModal')).hide();
+            window.location.reload();
+        } else {
+            const data = await response.json();
+            document.getElementById('mentorshipError').textContent = JSON.stringify(data);
+            document.getElementById('mentorshipError').classList.remove('d-none');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('mentorshipError').textContent = 'An error occurred. Please try again.';
+        document.getElementById('mentorshipError').classList.remove('d-none');
+    }
 });
 </script>
 {% endblock %}

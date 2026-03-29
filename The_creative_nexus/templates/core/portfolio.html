@@ -2,6 +2,26 @@
 
 {% block title %}Portfolio - The Creative Nexus{% endblock %}
 
+{% block extra_css %}
+<style>
+.btn-like, .btn-view {
+    transition: all 0.2s ease !important;
+}
+
+.btn-like:hover, .btn-view:hover {
+    background-color: var(--color-accent) !important;
+    border-color: var(--color-accent) !important;
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 149, 246, 0.3);
+}
+
+.btn-like:active, .btn-view:active {
+    transform: translateY(0);
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <section style="padding: var(--space-3xl) 0;">
     <div class="container-premium">
@@ -28,10 +48,10 @@
                     </div>
                     <div class="col-md-4 text-md-end mt-3 mt-md-0">
                         {% if portfolio.creator == user %}
-                            <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#uploadWorkModal">
                                 <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
                                 Add Works
-                            </a>
+                            </button>
                         {% endif %}
                     </div>
                 </div>
@@ -43,26 +63,26 @@
                 {% if portfolio.works.all %}
                     <div class="gallery-grid">
                         {% for work in portfolio.works.all %}
-                            <div class="gallery-card">
+                            <div class="gallery-card" data-work-id="{{ work.id }}">
                                 {% if work.thumbnail %}
-                                    <img src="{{ work.thumbnail.url }}" alt="{{ work.title }}" class="gallery-card-img">
+                                    <img src="{{ work.thumbnail.url }}" alt="{{ work.title }}" class="gallery-card-img" data-work-id="{{ work.id }}" data-file-url="{{ work.file.url }}">
                                 {% else %}
-                                    <div class="gallery-card-img" style="display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--color-border-light), var(--color-border));">
+                                    <div class="gallery-card-img" style="display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--color-border-light), var(--color-border));" data-work-id="{{ work.id }}" data-file-url="{{ work.file.url }}">
                                         <i data-lucide="image" style="width: 48px; height: 48px; color: var(--color-text-muted);"></i>
                                     </div>
                                 {% endif %}
                                 <div class="gallery-card-body">
                                     <div class="gallery-card-title">{{ work.title }}</div>
                                     <div class="gallery-card-text">{{ work.get_work_type_display }}</div>
-                                    <div class="gallery-card-actions">
-                                        <span style="display: flex; align-items: center; gap: 4px;">
-                                            <i data-lucide="heart" style="width: 14px; height: 14px;"></i>
-                                            {{ work.likes }}
-                                        </span>
-                                        <span style="display: flex; align-items: center; gap: 4px;">
-                                            <i data-lucide="eye" style="width: 14px; height: 14px;"></i>
-                                            {{ work.views }}
-                                        </span>
+                                    <div class="gallery-card-actions" style="border: none; gap: 8px; margin-top: var(--space-md); padding-top: var(--space-md); border-top: 1px solid var(--color-border); display: flex;">
+                                        <button type="button" class="btn-like" data-work-id="{{ work.id }}" style="background: #F0F0F0; border: 1px solid #D0D0D0; color: var(--color-primary); cursor: pointer; padding: 8px 12px; display: inline-flex; align-items: center; gap: 6px; border-radius: var(--radius-md); font-size: 13px; font-weight: 500; transition: all 0.2s ease; flex: 1; justify-content: center;">
+                                            <i data-lucide="heart" style="width: 16px; height: 16px;"></i>
+                                            <span class="like-count">{{ work.likes }}</span>
+                                        </button>
+                                        <button type="button" class="btn-view" data-work-id="{{ work.id }}" data-file-url="{{ work.file.url }}" style="background: #F0F0F0; border: 1px solid #D0D0D0; color: var(--color-primary); cursor: pointer; padding: 8px 12px; display: inline-flex; align-items: center; gap: 6px; border-radius: var(--radius-md); font-size: 13px; font-weight: 500; transition: all 0.2s ease; flex: 1; justify-content: center;">
+                                            <i data-lucide="eye" style="width: 16px; height: 16px;"></i>
+                                            <span class="view-count">{{ work.views }}</span>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -74,7 +94,7 @@
                         <h4 style="margin-bottom: var(--space-sm);">No works yet</h4>
                         <p>No works in this portfolio yet.</p>
                         {% if portfolio.creator == user %}
-                            <a href="{% url 'dashboard' %}" class="btn btn-primary mt-2">Upload Your First Work</a>
+                            <button type="button" class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#uploadWorkModal">Upload Your First Work</button>
                         {% endif %}
                     </div>
                 {% endif %}
@@ -95,7 +115,7 @@
                             <h5 style="margin-bottom: var(--space-xs);">{{ portfolio.creator.get_full_name|default:portfolio.creator.username }}</h5>
                             <span class="badge badge-accent mb-3">{{ portfolio.creator.profile.get_role_display }}</span>
                             {% if portfolio.creator != user %}
-                                <a href="#" class="btn btn-primary btn-sm w-100">
+                                <a href="#" class="btn btn-primary btn-sm w-100" onclick="openCollaborationModal({{ portfolio.creator.id }}, '{{ portfolio.creator.username }}')">
                                     <i data-lucide="message-circle" style="width: 16px; height: 16px;"></i>
                                     Collaborate
                                 </a>
@@ -206,4 +226,324 @@
         {% endif %}
     </div>
 </section>
+
+<!-- Hidden CSRF token for JS actions -->
+<form id="csrfForm" style="display:none">{% csrf_token %}</form>
+
+<!-- Collaboration Modal -->
+<div class="modal fade" id="collaborationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Send Collaboration Request</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="collaborationForm">
+                <div class="modal-body">
+                    <input type="hidden" id="collaboratorId">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">To:</label>
+                        <p id="collaboratorName" style="margin: 0; font-weight: bold;"></p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="collabTitle" class="form-label">Project Title</label>
+                        <input type="text" class="form-control" id="collabTitle" name="title" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="collabDesc" class="form-label">Description</label>
+                        <textarea class="form-control" id="collabDesc" name="description" rows="3" required></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="requiredSkills" class="form-label">Required Skills</label>
+                        <input type="text" class="form-control" id="requiredSkills" name="required_skills" placeholder="e.g., 3D Modeling, Animation">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="timeline" class="form-label">Timeline</label>
+                        <input type="text" class="form-control" id="timeline" name="timeline" placeholder="e.g., 2 months">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="budget" class="form-label">Budget Range</label>
+                        <input type="text" class="form-control" id="budget" name="budget_range" placeholder="e.g., $500 - $1000">
+                    </div>
+
+                    <div id="collabError" class="alert alert-danger d-none"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i data-lucide="send" style="width: 16px; height: 16px;"></i>
+                        Send Request
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Work Modal -->
+<div class="modal fade" id="uploadWorkModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Upload Work</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                {% if portfolio %}
+                    <form id="uploadWorkForm">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="workTitle" class="form-label">Work Title</label>
+                            <input type="text" class="form-control" id="workTitle" name="title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="workType" class="form-label">Work Type</label>
+                            <select class="form-select" id="workType" name="work_type" required>
+                                <option value="">Select type</option>
+                                <option value="digital_art">Digital Art</option>
+                                <option value="graphic_design">Graphic Design</option>
+                                <option value="animation">Animation</option>
+                                <option value="photography">Photography</option>
+                                <option value="video">Video</option>
+                                <option value="music">Music</option>
+                                <option value="writing">Writing</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="workDesc" class="form-label">Description</label>
+                            <textarea class="form-control" id="workDesc" name="description" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="workFile" class="form-label">Upload File</label>
+                            <input type="file" class="form-control" id="workFile" name="file" required>
+                        </div>
+                    </form>
+                    <div id="uploadError" class="alert alert-danger d-none"></div>
+                {% else %}
+                    <div class="alert alert-warning" style="display: flex; align-items: center; gap: var(--space-sm);">
+                        <i data-lucide="alert-triangle" style="width: 16px; height: 16px; flex-shrink: 0;"></i>
+                        <span>Please create a portfolio first to upload works.</span>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                {% if portfolio %}
+                    <button type="button" class="btn btn-primary" id="uploadBtn">Upload Work</button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Portfolio interactivity: likes, views, collaboration, and uploads
+document.addEventListener('DOMContentLoaded', function() {
+    // Reinitialize Lucide icons
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+    
+    const getCsrf = () => {
+        const token = document.querySelector('input[name="csrfmiddlewaretoken"]')?.value;
+        return token;
+    };
+
+    // Like button handler
+    const likeButtons = document.querySelectorAll('.btn-like');
+    likeButtons.forEach((btn) => {
+        btn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const workId = this.getAttribute('data-work-id');
+            const token = getCsrf();
+            
+            if (!token) {
+                alert('Security token not found. Please refresh the page.');
+                return;
+            }
+            if (!workId) {
+                alert('Work ID not found. Please refresh the page.');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/core/works/${workId}/like/`, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-CSRFToken': token,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const likeCountSpan = this.querySelector('.like-count');
+                    if (likeCountSpan) {
+                        likeCountSpan.textContent = data.likes;
+                    }
+                } else {
+                    const errorData = await response.json();
+                    alert('Error: ' + JSON.stringify(errorData));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        });
+    });
+
+    // View button handler: call view endpoint
+    const viewButtons = document.querySelectorAll('.btn-view');
+    viewButtons.forEach((btn) => {
+        btn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const workId = this.getAttribute('data-work-id');
+            const fileUrl = this.getAttribute('data-file-url');
+            const token = getCsrf();
+            
+            if (!workId) {
+                alert('Work ID not found.');
+                return;
+            }
+            
+            // Record the view
+            try {
+                await fetch(`/api/core/works/${workId}/view/`, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-CSRFToken': token || '',
+                        'Content-Type': 'application/json'
+                    }
+                });
+            } catch (error) {
+                console.error('View recording error:', error);
+            }
+            
+            // Open the file
+            if (fileUrl) {
+                window.open(fileUrl, '_blank');
+            } else {
+                alert('No file available for this work.');
+            }
+        });
+    });
+
+    // Collaboration modal helper
+    window.openCollaborationModal = function(userId, username) {
+        if (!{{ user.is_authenticated|lower }}) {
+            window.location.href = '{% url "login" %}';
+            return;
+        }
+        document.getElementById('collaboratorId').value = userId;
+        document.getElementById('collaboratorName').textContent = username;
+        document.getElementById('collaborationForm').reset();
+        document.getElementById('collabError').classList.add('d-none');
+        new bootstrap.Modal(document.getElementById('collaborationModal')).show();
+    };
+
+    document.getElementById('collaborationForm')?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const formData = {
+            collaborator: document.getElementById('collaboratorId').value,
+            title: document.getElementById('collabTitle').value,
+            description: document.getElementById('collabDesc').value,
+            required_skills: document.getElementById('requiredSkills').value,
+            timeline: document.getElementById('timeline').value,
+            budget_range: document.getElementById('budget').value
+        };
+
+        try {
+            const response = await fetch('/api/core/collaborations/', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrf(),
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+                alert('Collaboration request sent successfully!');
+                bootstrap.Modal.getInstance(document.getElementById('collaborationModal')).hide();
+                window.location.reload();
+            } else {
+                const data = await response.json();
+                document.getElementById('collabError').textContent = JSON.stringify(data);
+                document.getElementById('collabError').classList.remove('d-none');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('collabError').textContent = 'An error occurred. Please try again.';
+            document.getElementById('collabError').classList.remove('d-none');
+        }
+    });
+
+    // Upload work handler
+    document.getElementById('uploadBtn')?.addEventListener('click', async function() {
+        const form = document.getElementById('uploadWorkForm');
+        const formData = new FormData();
+        const csrfToken = getCsrf();
+
+        formData.append('title', document.getElementById('workTitle').value);
+        formData.append('work_type', document.getElementById('workType').value);
+        formData.append('description', document.getElementById('workDesc').value);
+
+        const fileInput = document.getElementById('workFile');
+        if (!fileInput || fileInput.files.length === 0) {
+            document.getElementById('uploadError').innerHTML = '<strong>Error:</strong> Please select a file to upload.';
+            document.getElementById('uploadError').classList.remove('d-none');
+            return;
+        }
+
+        formData.append('file', fileInput.files[0]);
+        formData.append('portfolio', {{ portfolio.id|default:'null' }});
+
+        try {
+            const response = await fetch('/api/core/works/', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'X-CSRFToken': csrfToken },
+                body: formData
+            });
+
+            if (response.ok) {
+                alert('Work uploaded successfully!');
+                window.location.reload();
+            } else {
+                let errorMsg = '';
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    const data = await response.json();
+                    errorMsg = data.detail || data.file?.[0] || JSON.stringify(data);
+                } else {
+                    const text = await response.text();
+                    errorMsg = `Server error (${response.status}): ${text.substring(0,200)}`;
+                }
+                document.getElementById('uploadError').innerHTML = `<strong>Upload Error:</strong><br/>${errorMsg}`;
+                document.getElementById('uploadError').classList.remove('d-none');
+                console.error('Upload error:', errorMsg, response);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('uploadError').textContent = 'Upload failed: ' + error.message;
+            document.getElementById('uploadError').classList.remove('d-none');
+        }
+    });
+});
+</script>
+
 {% endblock %}

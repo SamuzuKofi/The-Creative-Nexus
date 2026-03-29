@@ -3,88 +3,180 @@
 {% block title %}My Profile - The Creative Nexus{% endblock %}
 
 {% block content %}
-<div class="container-lg py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h4 class="mb-0"><i class="fas fa-user-edit"></i> Edit Profile</h4>
+<section style="padding: var(--space-3xl) 0; min-height: calc(100vh - 200px);">
+    <div class="container-premium">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <!-- Page Header -->
+                <div style="margin-bottom: var(--space-3xl);">
+                    <div style="display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-lg);">
+                        <div style="width: 48px; height: 48px; background: var(--color-accent-light); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <i data-lucide="user-pen" style="width: 24px; height: 24px; color: var(--color-accent);"></i>
+                        </div>
+                        <div>
+                            <h1 style="margin: 0; font-size: 28px;">Edit Profile</h1>
+                            <p style="margin: 0; margin-top: var(--space-xs); color: var(--color-text-muted); font-size: 14px;">Update your personal information and preferences</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body p-4">
-                    <form method="post" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="firstName" class="form-label">First Name</label>
-                                <input type="text" class="form-control" id="firstName" name="first_name" value="{{ user.first_name }}">
+
+                <!-- Profile Edit Card -->
+                <div class="card" style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+                    <div class="card-body" style="padding: var(--space-2xl);">
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            
+                            <!-- Profile Picture Section -->
+                            <div style="margin-bottom: var(--space-2xl); padding-bottom: var(--space-2xl); border-bottom: 1px solid var(--color-border);">
+                                <h5 style="margin-bottom: var(--space-lg); display: flex; align-items: center; gap: var(--space-sm);">
+                                    <i data-lucide="image" style="width: 16px; height: 16px;"></i>
+                                    Profile Picture
+                                </h5>
+                                <div style="display: flex; align-items: flex-end; gap: var(--space-lg);">
+                                    <div style="flex-shrink: 0;">
+                                        {% if profile.profile_picture %}
+                                            <img src="{{ profile.profile_picture.url }}" alt="Profile" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--color-accent); display: block;">
+                                        {% else %}
+                                            <div style="width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, var(--color-border-light), var(--color-border)); display: flex; align-items: center; justify-content: center; border: 3px solid var(--color-border);">
+                                                <i data-lucide="user" style="width: 40px; height: 40px; color: var(--color-text-muted);"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div style="flex-grow: 1;">
+                                        <div style="position: relative; display: inline-block; width: 100%;">
+                                            <input type="file" id="profilePic" name="profile_picture" accept="image/*" style="display: none;">
+                                            <label for="profilePic" class="btn btn-secondary" style="margin: 0; display: inline-flex; cursor: pointer;">
+                                                <i data-lucide="upload" style="width: 16px; height: 16px;"></i>
+                                                Upload New Picture
+                                            </label>
+                                        </div>
+                                        <small style="display: block; margin-top: var(--space-sm); color: var(--color-text-muted);">JPG, PNG or GIF (Max 5MB)</small>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="col-md-6">
-                                <label for="lastName" class="form-label">Last Name</label>
-                                <input type="text" class="form-control" id="lastName" name="last_name" value="{{ user.last_name }}">
+
+                            <!-- Basic Information Section -->
+                            <div style="margin-bottom: var(--space-2xl); padding-bottom: var(--space-2xl); border-bottom: 1px solid var(--color-border);">
+                                <h5 style="margin-bottom: var(--space-lg); display: flex; align-items: center; gap: var(--space-sm);">
+                                    <i data-lucide="user" style="width: 16px; height: 16px;"></i>
+                                    Basic Information
+                                </h5>
+
+                                <div class="row" style="margin-bottom: var(--space-lg);">
+                                    <div class="col-md-6">
+                                        <label for="firstName" class="form-label" style="font-weight: 600; margin-bottom: var(--space-sm); display: block;">First Name</label>
+                                        <div style="position: relative;">
+                                            <i data-lucide="type" style="position: absolute; left: var(--space-md); top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--color-text-muted);"></i>
+                                            <input type="text" class="form-control" id="firstName" name="first_name" value="{{ user.first_name }}" style="padding-left: 2.5rem; border-radius: var(--radius-md); border: 1px solid var(--color-border);">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label for="lastName" class="form-label" style="font-weight: 600; margin-bottom: var(--space-sm); display: block;">Last Name</label>
+                                        <div style="position: relative;">
+                                            <i data-lucide="type" style="position: absolute; left: var(--space-md); top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--color-text-muted);"></i>
+                                            <input type="text" class="form-control" id="lastName" name="last_name" value="{{ user.last_name }}" style="padding-left: 2.5rem; border-radius: var(--radius-md); border: 1px solid var(--color-border);">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="margin-bottom: var(--space-lg);">
+                                    <label for="email" class="form-label" style="font-weight: 600; margin-bottom: var(--space-sm); display: block;">Email Address</label>
+                                    <div style="position: relative;">
+                                        <i data-lucide="mail" style="position: absolute; left: var(--space-md); top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--color-text-muted);"></i>
+                                        <input type="email" class="form-control" id="email" value="{{ user.email }}" disabled style="padding-left: 2.5rem; border-radius: var(--radius-md); border: 1px solid var(--color-border); background: var(--color-border-light); color: var(--color-text-muted);">
+                                    </div>
+                                    <small style="display: block; margin-top: var(--space-sm); color: var(--color-text-muted);">Cannot be changed</small>
+                                </div>
+
+                                <div style="margin-bottom: 0;">
+                                    <label for="role" class="form-label" style="font-weight: 600; margin-bottom: var(--space-sm); display: block;">Role</label>
+                                    <div style="position: relative;">
+                                        <i data-lucide="briefcase" style="position: absolute; left: var(--space-md); top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--color-text-muted);"></i>
+                                        <input type="text" class="form-control" id="role" value="{{ profile.get_role_display }}" disabled style="padding-left: 2.5rem; border-radius: var(--radius-md); border: 1px solid var(--color-border); background: var(--color-border-light); color: var(--color-text-muted);">
+                                    </div>
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email Address</label>
-                            <input type="email" class="form-control" id="email" value="{{ user.email }}" disabled>
-                        </div>
+                            <!-- Professional Information Section -->
+                            <div style="margin-bottom: var(--space-2xl); padding-bottom: var(--space-2xl); border-bottom: 1px solid var(--color-border);">
+                                <h5 style="margin-bottom: var(--space-lg); display: flex; align-items: center; gap: var(--space-sm);">
+                                    <i data-lucide="star" style="width: 16px; height: 16px;"></i>
+                                    Professional Information
+                                </h5>
 
-                        <div class="mb-3">
-                            <label for="role" class="form-label">Role</label>
-                            <input type="text" class="form-control" id="role" value="{{ profile.get_role_display }}" disabled>
-                        </div>
+                                <div style="margin-bottom: var(--space-lg);">
+                                    <label for="bio" class="form-label" style="font-weight: 600; margin-bottom: var(--space-sm); display: block;">Bio</label>
+                                    <textarea class="form-control" id="bio" name="bio" rows="4" placeholder="Tell us about yourself..." style="border-radius: var(--radius-md); border: 1px solid var(--color-border); padding: var(--space-md); font-family: var(--font-body);">{{ profile.bio }}</textarea>
+                                    <small style="display: block; margin-top: var(--space-sm); color: var(--color-text-muted);">Max 500 characters</small>
+                                </div>
 
-                        <div class="mb-3">
-                            <label for="bio" class="form-label">Bio</label>
-                            <textarea class="form-control" id="bio" name="bio" rows="3">{{ profile.bio }}</textarea>
-                        </div>
+                                <div style="margin-bottom: var(--space-lg);">
+                                    <label for="skills" class="form-label" style="font-weight: 600; margin-bottom: var(--space-sm); display: block;">Skills</label>
+                                    <div style="position: relative;">
+                                        <i data-lucide="zap" style="position: absolute; left: var(--space-md); top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--color-text-muted);"></i>
+                                        <input type="text" class="form-control" id="skills" name="skills" value="{{ profile.skills }}" placeholder="e.g., Graphic Design, Illustration, 3D Modeling" style="padding-left: 2.5rem; border-radius: var(--radius-md); border: 1px solid var(--color-border);">
+                                    </div>
+                                    <small style="display: block; margin-top: var(--space-sm); color: var(--color-text-muted);">Separate with commas</small>
+                                </div>
 
-                        <div class="mb-3">
-                            <label for="location" class="form-label">Location</label>
-                            <input type="text" class="form-control" id="location" name="location" value="{{ profile.location }}">
-                        </div>
+                                <div style="margin-bottom: 0;">
+                                    <label for="experience" class="form-label" style="font-weight: 600; margin-bottom: var(--space-sm); display: block;">Years of Experience</label>
+                                    <div style="position: relative;">
+                                        <i data-lucide="calendar" style="position: absolute; left: var(--space-md); top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--color-text-muted);"></i>
+                                        <input type="number" class="form-control" id="experience" name="years_experience" value="{{ profile.years_experience }}" style="padding-left: 2.5rem; border-radius: var(--radius-md); border: 1px solid var(--color-border);">
+                                    </div>
+                                </div>
+                            </div>
 
-                        <div class="mb-3">
-                            <label for="phone" class="form-label">Phone Number</label>
-                            <input type="tel" class="form-control" id="phone" name="phone" value="{{ profile.phone }}">
-                        </div>
+                            <!-- Contact & Social Section -->
+                            <div style="margin-bottom: var(--space-2xl);">
+                                <h5 style="margin-bottom: var(--space-lg); display: flex; align-items: center; gap: var(--space-sm);">
+                                    <i data-lucide="link-2" style="width: 16px; height: 16px;"></i>
+                                    Contact & Social
+                                </h5>
 
-                        <div class="mb-3">
-                            <label for="website" class="form-label">Website URL</label>
-                            <input type="url" class="form-control" id="website" name="website" value="{{ profile.website }}">
-                        </div>
+                                <div style="margin-bottom: var(--space-lg);">
+                                    <label for="location" class="form-label" style="font-weight: 600; margin-bottom: var(--space-sm); display: block;">Location</label>
+                                    <div style="position: relative;">
+                                        <i data-lucide="map-pin" style="position: absolute; left: var(--space-md); top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--color-text-muted);"></i>
+                                        <input type="text" class="form-control" id="location" name="location" value="{{ profile.location }}" placeholder="City, Country" style="padding-left: 2.5rem; border-radius: var(--radius-md); border: 1px solid var(--color-border);">
+                                    </div>
+                                </div>
 
-                        <div class="mb-3">
-                            <label for="skills" class="form-label">Skills (comma-separated)</label>
-                            <input type="text" class="form-control" id="skills" name="skills" value="{{ profile.skills }}" placeholder="e.g., Graphic Design, Illustration, 3D Modeling">
-                        </div>
+                                <div style="margin-bottom: var(--space-lg);">
+                                    <label for="phone" class="form-label" style="font-weight: 600; margin-bottom: var(--space-sm); display: block;">Phone Number</label>
+                                    <div style="position: relative;">
+                                        <i data-lucide="phone" style="position: absolute; left: var(--space-md); top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--color-text-muted);"></i>
+                                        <input type="tel" class="form-control" id="phone" name="phone" value="{{ profile.phone }}" style="padding-left: 2.5rem; border-radius: var(--radius-md); border: 1px solid var(--color-border);">
+                                    </div>
+                                </div>
 
-                        <div class="mb-3">
-                            <label for="experience" class="form-label">Years of Experience</label>
-                            <input type="number" class="form-control" id="experience" name="years_experience" value="{{ profile.years_experience }}">
-                        </div>
+                                <div style="margin-bottom: 0;">
+                                    <label for="website" class="form-label" style="font-weight: 600; margin-bottom: var(--space-sm); display: block;">Website URL</label>
+                                    <div style="position: relative;">
+                                        <i data-lucide="globe" style="position: absolute; left: var(--space-md); top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--color-text-muted);"></i>
+                                        <input type="url" class="form-control" id="website" name="website" value="{{ profile.website }}" placeholder="https://yourwebsite.com" style="padding-left: 2.5rem; border-radius: var(--radius-md); border: 1px solid var(--color-border);">
+                                    </div>
+                                </div>
+                            </div>
 
-                        <div class="mb-3">
-                            <label for="profilePic" class="form-label">Profile Picture</label>
-                            <input type="file" class="form-control" id="profilePic" name="profile_picture" accept="image/*">
-                            {% if profile.profile_picture %}
-                                <small class="text-muted mt-2">
-                                    <img src="{{ profile.profile_picture.url }}" alt="Profile" style="max-width: 100px; max-height: 100px; margin-top: 10px;">
-                                </small>
-                            {% endif %}
-                        </div>
-
-                        <div class="mt-4">
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="fas fa-save"></i> Save Changes
-                            </button>
-                            <a href="{% url 'dashboard' %}" class="btn btn-secondary btn-lg ms-2">Cancel</a>
-                        </div>
-                    </form>
+                            <!-- Action Buttons -->
+                            <div style="display: flex; gap: var(--space-md); margin-top: var(--space-2xl);">
+                                <button type="submit" class="btn btn-primary" style="padding: var(--space-md) var(--space-xl); font-weight: 600; flex-grow: 1;">
+                                    <i data-lucide="save" style="width: 16px; height: 16px;"></i>
+                                    Save Changes
+                                </button>
+                                <a href="{% url 'dashboard' %}" class="btn btn-secondary" style="padding: var(--space-md) var(--space-xl); font-weight: 600;">
+                                    <i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i>
+                                    Cancel
+                                </a>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 {% endblock %}

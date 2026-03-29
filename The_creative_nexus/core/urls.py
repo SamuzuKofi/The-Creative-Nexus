@@ -13,5 +13,7 @@ router.register(r'projects', views.ProjectViewSet, basename='project')
 router.register(r'notifications', views.NotificationViewSet,
                 basename='notification')
 router.register(r'ratings', views.RatingViewSet, basename='rating')
+router.register(r'mentorship-requests', views.MentorshipRequestViewSet,
+                basename='mentorship-request')
 
 urlpatterns = router.urls

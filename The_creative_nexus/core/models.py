@@ -18,6 +18,14 @@ COLLABORATION_STATUS_CHOICES = (
     ('completed', 'Completed'),
 )
 
+MENTORSHIP_STATUS_CHOICES = (
+    ('pending', 'Pending'),
+    ('accepted', 'Accepted'),
+    ('rejected', 'Rejected'),
+    ('active', 'Active'),
+    ('completed', 'Completed'),
+)
+
 
 class Portfolio(models.Model):
     """Artist portfolio to showcase their work"""
@@ -172,6 +180,9 @@ class Notification(models.Model):
         ('project_update', 'Project Update'),
         ('message', 'Message'),
         ('profile_view', 'Profile View'),
+        ('mentorship_request', 'Mentorship Request'),
+        ('mentorship_accepted', 'Mentorship Accepted'),
+        ('mentorship_rejected', 'Mentorship Rejected'),
     )
 
     recipient = models.ForeignKey(
@@ -192,6 +203,8 @@ class Notification(models.Model):
         Collaboration, on_delete=models.CASCADE, blank=True, null=True)
     related_project = models.ForeignKey(
         Project, on_delete=models.CASCADE, blank=True, null=True)
+    related_mentorship = models.ForeignKey(
+        'MentorshipRequest', on_delete=models.CASCADE, blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -223,3 +236,45 @@ class Rating(models.Model):
 
     def __str__(self):
         return f"{self.rater.username} rated {self.rated_user.username}: {self.rating}/5"
+
+
+class MentorshipRequest(models.Model):
+    """Mentorship request from junior creator to senior mentor"""
+    mentor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='mentorship_requests_received'
+    )
+    mentee = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='mentorship_requests_sent'
+    )
+
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    status = models.CharField(
+        max_length=20, choices=MENTORSHIP_STATUS_CHOICES, default='pending')
+
+    skills_to_learn = models.TextField(
+        blank=True, null=True, help_text="Comma-separated skills mentee wants to learn")
+    experience_level = models.CharField(
+        max_length=20,
+        choices=[
+            ('beginner', 'Beginner'),
+            ('intermediate', 'Intermediate'),
+            ('advanced', 'Advanced'),
+        ],
+        default='beginner'
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    responded_at = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        unique_together = ('mentor', 'mentee')
+
+    def __str__(self):
+        return f"{self.mentee.username} → {self.mentor.username}: {self.title}"

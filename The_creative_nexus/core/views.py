@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.utils import timezone
 from django.db.models import Q
 
-from .models import Portfolio, CreativeWork, Collaboration, Project, Notification, Rating
+from .models import Portfolio, CreativeWork, Collaboration, Project, Notification, Rating, MentorshipRequest
 from .serializers import (
     PortfolioSerializer,
     CreativeWorkSerializer,
@@ -13,7 +13,9 @@ from .serializers import (
     CollaborationDetailSerializer,
     ProjectSerializer,
     NotificationSerializer,
-    RatingSerializer
+    RatingSerializer,
+    MentorshipRequestListSerializer,
+    MentorshipRequestDetailSerializer
 )
 
 
@@ -297,3 +299,90 @@ class RatingViewSet(viewsets.ModelViewSet):
             'average_rating': round(average, 2),
             'total_ratings': len(ratings)
         })
+
+
+class MentorshipRequestViewSet(viewsets.ModelViewSet):
+    """Mentorship request management"""
+    queryset = MentorshipRequest.objects.all()
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        return MentorshipRequest.objects.filter(
+            Q(mentor=user) | Q(mentee=user)
+        ).select_related('mentor', 'mentee')
+
+    def get_serializer_class(self):
+        if self.action == 'retrieve':
+            return MentorshipRequestDetailSerializer
+        return MentorshipRequestListSerializer
+
+    def perform_create(self, serializer):
+        """Create mentorship request"""
+        serializer.save(mentee=self.request.user)
+
+    @action(detail=True, methods=['post'])
+    def accept(self, request, pk=None):
+        """Accept a mentorship request"""
+        mentorship = self.get_object()
+        if mentorship.mentor != request.user:
+            return Response(
+                {'error': 'Only the mentor can accept'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        mentorship.status = 'accepted'
+        mentorship.responded_at = timezone.now()
+        mentorship.save()
+
+        # Create notification
+        Notification.objects.create(
+            recipient=mentorship.mentee,
+            sender=request.user,
+            notification_type='mentorship_accepted',
+            title=f'{request.user.username} accepted your mentorship request',
+            message=f'Great! {request.user.username} has accepted your mentorship request: {mentorship.title}',
+            related_mentorship=mentorship
+        )
+
+        return Response({'status': 'accepted'})
+
+    @action(detail=True, methods=['post'])
+    def reject(self, request, pk=None):
+        """Reject a mentorship request"""
+        mentorship = self.get_object()
+        if mentorship.mentor != request.user:
+            return Response(
+                {'error': 'Only the mentor can reject'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        mentorship.status = 'rejected'
+        mentorship.responded_at = timezone.now()
+        mentorship.save()
+
+        # Create notification
+        Notification.objects.create(
+            recipient=mentorship.mentee,
+            sender=request.user,
+            notification_type='mentorship_rejected',
+            title=f'{request.user.username} declined your mentorship request',
+            message=f'{request.user.username} was unable to accept your mentorship request: {mentorship.title}',
+            related_mentorship=mentorship
+        )
+
+        return Response({'status': 'rejected'})
+
+    @action(detail=False, methods=['get'])
+    def my_requests(self, request):
+        """Get mentorship requests sent by current user"""
+        requests = MentorshipRequest.objects.filter(mentee=request.user)
+        serializer = self.get_serializer(requests, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def received_requests(self, request):
+        """Get mentorship requests received by current user"""
+        requests = MentorshipRequest.objects.filter(mentor=request.user)
+        serializer = self.get_serializer(requests, many=True)
+        return Response(serializer.data)

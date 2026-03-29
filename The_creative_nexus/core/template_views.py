@@ -4,8 +4,9 @@ from django.contrib.auth import authenticate, login, logout
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from accounts.models import CustomUser, UserProfile
-from core.models import Portfolio, CreativeWork, Collaboration, Project, Notification
+from core.models import Portfolio, CreativeWork, Collaboration, Project, Notification, MentorshipRequest
 from rest_framework.decorators import api_view, permission_classes
+from django.db.models import F
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
@@ -22,7 +23,7 @@ def dashboard(request):
     user = request.user
     # Ensure user has a profile
     profile, _ = UserProfile.objects.get_or_create(user=user)
-    
+
     try:
         portfolio = Portfolio.objects.get(creator=user)
     except Portfolio.DoesNotExist:
@@ -33,12 +34,15 @@ def dashboard(request):
         creator=user) | Collaboration.objects.filter(collaborator=user)
     unread_notifications = Notification.objects.filter(
         recipient=user, is_read=False)
+    mentorship_requests = MentorshipRequest.objects.filter(
+        mentor=user) | MentorshipRequest.objects.filter(mentee=user)
 
     context = {
         'portfolio': portfolio,
         'my_works': my_works,
         'collaborations': collaborations,
-        'unread_notifications': unread_notifications
+        'unread_notifications': unread_notifications,
+        'mentorship_requests': mentorship_requests
     }
     return render(request, 'core/dashboard.html', context)
 
@@ -58,18 +62,18 @@ def portfolio_view(request, user_id=None):
     if user_id:
         from django.contrib.auth import get_user_model
         from django.http import Http404
-        
+
         User = get_user_model()
-        
+
         # Check if user exists
         try:
             portfolio_owner = User.objects.get(id=user_id)
         except User.DoesNotExist:
             raise Http404("User not found")
-        
+
         # Try to get portfolio
         portfolio = Portfolio.objects.filter(creator=portfolio_owner).first()
-        
+
         if not portfolio:
             # Return empty portfolio view for user without portfolio
             context = {
@@ -80,8 +84,25 @@ def portfolio_view(request, user_id=None):
                 'portfolio_owner': portfolio_owner
             }
             return render(request, 'core/portfolio.html', context)
-        
+
         works = portfolio.works.all()
+        # Increment portfolio view count when someone (not the owner) visits
+        try:
+            if request.user != portfolio_owner:
+                Portfolio.objects.filter(pk=portfolio.pk).update(
+                    total_views=F('total_views') + 1)
+                # Create a notification for authenticated viewers
+                if request.user.is_authenticated:
+                    Notification.objects.create(
+                        recipient=portfolio_owner,
+                        sender=request.user,
+                        notification_type='profile_view',
+                        title=f'{request.user.username} viewed your portfolio',
+                        message=f'{request.user.username} viewed your portfolio: {portfolio.title}'
+                    )
+        except Exception:
+            # Don't fail page render if counting a view fails
+            pass
         context = {
             'portfolio': portfolio,
             'works': works,
@@ -100,7 +121,7 @@ def portfolio_view(request, user_id=None):
             description = request.POST.get('description')
             category = request.POST.get('category', 'other')
             cover_image = request.FILES.get('cover_image')
-            
+
             portfolio = Portfolio.objects.create(
                 creator=user,
                 title=title,

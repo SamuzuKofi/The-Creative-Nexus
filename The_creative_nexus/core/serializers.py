@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Portfolio, CreativeWork, Collaboration, Project, Notification, Rating
+from .models import Portfolio, CreativeWork, Collaboration, Project, Notification, Rating, MentorshipRequest
 
 
 class CreativeWorkSerializer(serializers.ModelSerializer):
@@ -118,3 +118,38 @@ class RatingSerializer(serializers.ModelSerializer):
             'rated_user_username', 'rating', 'review', 'created_at'
         )
         read_only_fields = ('id', 'created_at')
+
+
+class MentorshipRequestListSerializer(serializers.ModelSerializer):
+    mentor_username = serializers.CharField(
+        source='mentor.username', read_only=True)
+    mentee_username = serializers.CharField(
+        source='mentee.username', read_only=True)
+    status_display = serializers.CharField(
+        source='get_status_display', read_only=True)
+
+    class Meta:
+        model = MentorshipRequest
+        fields = (
+            'id', 'mentor', 'mentor_username', 'mentee', 'mentee_username',
+            'title', 'status', 'status_display', 'experience_level', 'created_at'
+        )
+        read_only_fields = ('id', 'created_at')
+
+
+class MentorshipRequestDetailSerializer(serializers.ModelSerializer):
+    mentor_username = serializers.CharField(
+        source='mentor.username', read_only=True)
+    mentee_username = serializers.CharField(
+        source='mentee.username', read_only=True)
+    status_display = serializers.CharField(
+        source='get_status_display', read_only=True)
+
+    class Meta:
+        model = MentorshipRequest
+        fields = (
+            'id', 'mentor', 'mentor_username', 'mentee', 'mentee_username',
+            'title', 'description', 'status', 'status_display', 'skills_to_learn',
+            'experience_level', 'created_at', 'updated_at', 'responded_at'
+        )
+        read_only_fields = ('id', 'created_at', 'updated_at', 'responded_at')

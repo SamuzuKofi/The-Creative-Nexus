@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Portfolio, CreativeWork, Collaboration, Project, Notification, Rating
+from .models import Portfolio, CreativeWork, Collaboration, Project, Notification, Rating, MentorshipRequest
 
 
 @admin.register(Portfolio)
@@ -51,3 +51,12 @@ class RatingAdmin(admin.ModelAdmin):
     list_display = ('rated_user', 'rater', 'rating', 'created_at')
     list_filter = ('rating', 'created_at')
     search_fields = ('rated_user__email', 'rater__email')
+
+
+@admin.register(MentorshipRequest)
+class MentorshipRequestAdmin(admin.ModelAdmin):
+    list_display = ('title', 'mentor', 'mentee', 'status',
+                    'experience_level', 'created_at')
+    list_filter = ('status', 'experience_level', 'created_at')
+    search_fields = ('title', 'mentor__email', 'mentee__email', 'description')
+    readonly_fields = ('created_at', 'updated_at', 'responded_at')

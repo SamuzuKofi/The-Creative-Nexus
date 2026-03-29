@@ -4,27 +4,27 @@
 
 {% block content %}
 <!-- Hero Section -->
-<section style="background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%); color: white; padding: var(--space-4xl) 0; text-align: center;">
+<section style="background: white; padding: var(--space-4xl) 0; text-align: center; border-bottom: 1px solid var(--color-border);">
     <div class="container-premium">
-        <h1 style="color: white; margin-bottom: var(--space-md); font-weight: 500;">The Creative Nexus</h1>
-        <p style="color: rgba(255,255,255,0.85); font-size: 1.25rem; max-width: 600px; margin: 0 auto var(--space-xl);">Connect. Collaborate. Create. Empowering Ghana's Creative Economy</p>
+        <h1 style="font-size: 44px; margin-bottom: var(--space-md); color: var(--color-primary); font-weight: 700;">The Creative Nexus</h1>
+        <p style="color: var(--color-text-muted); font-size: 18px; max-width: 600px; margin: 0 auto var(--space-2xl); line-height: 1.6;">Connect with talented creators, collaborate on amazing projects, and showcase your work to the world.</p>
         <div class="d-flex justify-content-center gap-3 flex-wrap">
             {% if not user.is_authenticated %}
-                <a href="{% url 'register' %}" class="btn btn-lg" style="background: white; color: var(--color-primary);">
-                    <i data-lucide="user-plus" style="width: 20px; height: 20px;"></i>
-                    Get Started
+                <a href="{% url 'register' %}" class="btn btn-lg btn-primary">
+                    <i data-lucide="arrow-right" style="width: 16px; height: 16px;"></i>
+                    Get Started Free
                 </a>
-                <a href="{% url 'explore' %}" class="btn btn-lg" style="background: transparent; color: white; border: 1px solid rgba(255,255,255,0.5);">
-                    <i data-lucide="compass" style="width: 20px; height: 20px;"></i>
-                    Explore
+                <a href="{% url 'explore' %}" class="btn btn-lg btn-secondary">
+                    <i data-lucide="compass" style="width: 16px; height: 16px;"></i>
+                    Explore Community
                 </a>
             {% else %}
-                <a href="{% url 'portfolio' %}" class="btn btn-lg" style="background: white; color: var(--color-primary);">
-                    <i data-lucide="image" style="width: 20px; height: 20px;"></i>
+                <a href="{% url 'portfolio' %}" class="btn btn-lg btn-primary">
+                    <i data-lucide="image" style="width: 16px; height: 16px;"></i>
                     My Portfolio
                 </a>
-                <a href="{% url 'explore' %}" class="btn btn-lg" style="background: transparent; color: white; border: 1px solid rgba(255,255,255,0.5);">
-                    <i data-lucide="users" style="width: 20px; height: 20px;"></i>
+                <a href="{% url 'explore' %}" class="btn btn-lg btn-secondary">
+                    <i data-lucide="users" style="width: 16px; height: 16px;"></i>
                     Discover Creators
                 </a>
             {% endif %}
@@ -33,38 +33,38 @@
 </section>
 
 <!-- Features Section -->
-<section style="background: var(--color-surface); padding: var(--space-3xl) 0;">
+<section style="background: var(--color-background); padding: var(--space-3xl) 0;">
     <div class="container-premium">
-        <div class="section-header">
-            <h2>Why Choose The Creative Nexus</h2>
-            <p>A refined platform for Ghana's most talented creative professionals</p>
+        <div class="section-header" style="margin-bottom: var(--space-3xl);">
+            <h2 style="margin-bottom: var(--space-md);">Why Join The Creative Nexus</h2>
+            <p style="color: var(--color-text-muted); font-size: 16px;">Everything you need to build your creative career</p>
         </div>
-        <div class="row" style="margin-top: var(--space-2xl);">
-            <div class="col-md-4 mb-4">
-                <div class="text-center" style="padding: var(--space-xl);">
-                    <div style="width: 64px; height: 64px; background: var(--color-accent-light); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-md);">
-                        <i data-lucide="image" style="width: 28px; height: 28px; color: var(--color-accent);"></i>
+        <div class="row" style="--bs-gutter-x: var(--space-xl); --bs-gutter-y: var(--space-xl);">
+            <div class="col-md-4">
+                <div style="padding: var(--space-xl); text-align: center;">
+                    <div style="width: 80px; height: 80px; background: var(--color-accent-light); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-lg);">
+                        <i data-lucide="image" style="width: 40px; height: 40px; color: var(--color-accent);"></i>
                     </div>
-                    <h4 style="margin-bottom: var(--space-sm);">Showcase Your Work</h4>
-                    <p>Create a stunning portfolio and display your best creative works to the world.</p>
+                    <h4 style="margin-bottom: var(--space-sm); color: var(--color-primary);">Showcase Your Work</h4>
+                    <p style="font-size: 14px; color: var(--color-text-muted); margin: 0;">Build a stunning portfolio with your best creative works and reach potential clients and collaborators.</p>
                 </div>
             </div>
-            <div class="col-md-4 mb-4">
-                <div class="text-center" style="padding: var(--space-xl);">
-                    <div style="width: 64px; height: 64px; background: var(--color-accent-light); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-md);">
-                        <i data-lucide="handshake" style="width: 28px; height: 28px; color: var(--color-accent);"></i>
+            <div class="col-md-4">
+                <div style="padding: var(--space-xl); text-align: center;">
+                    <div style="width: 80px; height: 80px; background: var(--color-accent-light); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-lg);">
+                        <i data-lucide="users" style="width: 40px; height: 40px; color: var(--color-accent);"></i>
                     </div>
-                    <h4 style="margin-bottom: var(--space-sm);">Find Collaborators</h4>
-                    <p>Connect with other talented creators and find the perfect team for your projects.</p>
+                    <h4 style="margin-bottom: var(--space-sm); color: var(--color-primary);">Connect & Collaborate</h4>
+                    <p style="font-size: 14px; color: var(--color-text-muted); margin: 0;">Find talented creators and collaborators to work with on projects that matter to you.</p>
                 </div>
             </div>
-            <div class="col-md-4 mb-4">
-                <div class="text-center" style="padding: var(--space-xl);">
-                    <div style="width: 64px; height: 64px; background: var(--color-accent-light); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-md);">
-                        <i data-lucide="briefcase" style="width: 28px; height: 28px; color: var(--color-accent);"></i>
+            <div class="col-md-4">
+                <div style="padding: var(--space-xl); text-align: center;">
+                    <div style="width: 80px; height: 80px; background: var(--color-accent-light); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-lg);">
+                        <i data-lucide="trending-up" style="width: 40px; height: 40px; color: var(--color-accent);"></i>
                     </div>
-                    <h4 style="margin-bottom: var(--space-sm);">Land Opportunities</h4>
-                    <p>Get discovered by clients looking for creative services right here in Ghana.</p>
+                    <h4 style="margin-bottom: var(--space-sm); color: var(--color-primary);">Grow Your Career</h4>
+                    <p style="font-size: 14px; color: var(--color-text-muted); margin: 0;">Get discovered by clients and expand your opportunities in Ghana's creative economy.</p>
                 </div>
             </div>
         </div>
@@ -72,33 +72,33 @@
 </section>
 
 <!-- Gallery Section -->
-<section style="padding: var(--space-3xl) 0;">
+<section style="padding: var(--space-3xl) 0; background: white;">
     <div class="container-premium">
-        <div class="section-header">
-            <h2>Featured Works</h2>
-            <p>Discover exceptional creative work from our community</p>
+        <div class="section-header" style="margin-bottom: var(--space-3xl);">
+            <h2 style="margin-bottom: var(--space-md);">Featured Works</h2>
+            <p style="color: var(--color-text-muted); font-size: 16px;">Discover exceptional creative work from our talented community</p>
         </div>
         {% if works %}
-            <div class="gallery-grid" style="margin-top: var(--space-2xl);">
+            <div class="gallery-grid" style="margin-top: 0;">
                 {% for work in works %}
-                    <a href="{% url 'view-portfolio' work.creator.id %}" style="text-decoration: none;">
-                        <div class="gallery-card">
+                    <a href="{% url 'view-portfolio' work.creator.id %}" style="text-decoration: none; color: inherit;">
+                        <div class="gallery-card" style="cursor: pointer;">
                             {% if work.thumbnail %}
-                                <img src="{{ work.thumbnail.url }}" alt="{{ work.title }}" class="gallery-card-img">
+                                <img src="{{ work.thumbnail.url }}" alt="{{ work.title }}" class="gallery-card-img" style="background: #F5F5F5;">
                             {% else %}
-                                <div class="gallery-card-img" style="display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--color-border-light), var(--color-border));">
+                                <div class="gallery-card-img" style="display: flex; align-items: center; justify-content: center; background: #F5F5F5;">
                                     <i data-lucide="image" style="width: 48px; height: 48px; color: var(--color-text-muted);"></i>
                                 </div>
                             {% endif %}
                             <div class="gallery-card-body">
-                                <div class="gallery-card-title">{{ work.title|truncatewords:5 }}</div>
-                                <div class="gallery-card-text">{{ work.creator.username }}</div>
-                                <div class="gallery-card-actions">
-                                    <span style="display: flex; align-items: center; gap: 4px;">
+                                <div class="gallery-card-title" style="font-size: 16px;">{{ work.title|truncatewords:5 }}</div>
+                                <div class="gallery-card-text" style="font-size: 13px; margin-bottom: var(--space-md);">{{ work.creator.username }}</div>
+                                <div class="gallery-card-actions" style="border: none; gap: var(--space-xl);">
+                                    <span style="display: flex; align-items: center; gap: var(--space-xs); font-size: 12px;">
                                         <i data-lucide="heart" style="width: 14px; height: 14px;"></i>
                                         {{ work.likes }}
                                     </span>
-                                    <span style="display: flex; align-items: center; gap: 4px;">
+                                    <span style="display: flex; align-items: center; gap: var(--space-xs); font-size: 12px;">
                                         <i data-lucide="eye" style="width: 14px; height: 14px;"></i>
                                         {{ work.views }}
                                     </span>
@@ -109,11 +109,12 @@
                 {% endfor %}
             </div>
         {% else %}
-            <div class="alert alert-info" style="margin-top: var(--space-xl);">
-                <div style="display: flex; align-items: center; gap: var(--space-sm);">
-                    <i data-lucide="info" style="width: 20px; height: 20px;"></i>
-                    No works yet. Be the first to create and showcase your talents!
+            <div style="text-align: center; padding: var(--space-3xl) 0;">
+                <div style="width: 80px; height: 80px; background: var(--color-border); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-lg);">
+                    <i data-lucide="inbox" style="width: 40px; height: 40px; color: var(--color-text-muted);"></i>
                 </div>
+                <h3 style="color: var(--color-primary); margin-bottom: var(--space-sm);">No works yet</h3>
+                <p style="color: var(--color-text-muted);">Be the first to create and showcase your talents!</p>
             </div>
         {% endif %}
     </div>
@@ -121,18 +122,18 @@
 
 <!-- CTA Section -->
 <section style="background: var(--color-primary); color: white; padding: var(--space-3xl) 0; text-align: center;">
-    <div class="container-lg text-center">
-        <h2 class="mb-3">Ready to Join Ghana's Creative Revolution?</h2>
-        <p style="font-size: 1.1rem; margin-bottom: 30px;">
-            Whether you're a creator, client, or mentor, The Creative Nexus has something for you.
-        </p>
+    <div class="container-premium">
+        <h2 style="color: white; margin-bottom: var(--space-md); font-size: 32px;">Ready to Start Creating?</h2>
+        <p style="font-size: 16px; margin-bottom: var(--space-2xl); color: rgba(255,255,255,0.8); max-width: 600px; margin-left: auto; margin-right: auto;">Join thousands of creators building their careers and collaborating on amazing projects.</p>
         {% if not user.is_authenticated %}
-            <a href="{% url 'register' %}" class="btn btn-light btn-lg me-3">
-                <i class="fas fa-rocket"></i> Launch Your Journey
+            <a href="{% url 'register' %}" class="btn btn-lg" style="background: white; color: var(--color-primary); font-weight: 600;">
+                <i data-lucide="rocket" style="width: 16px; height: 16px;"></i> 
+                Launch Your Journey
             </a>
         {% else %}
-            <a href="{% url 'portfolio' %}" class="btn btn-light btn-lg me-3">
-                <i class="fas fa-image"></i> Create Portfolio
+            <a href="{% url 'portfolio' %}" class="btn btn-lg" style="background: white; color: var(--color-primary); font-weight: 600;">
+                <i data-lucide="plus-circle" style="width: 16px; height: 16px;"></i>
+                Create New Post
             </a>
         {% endif %}
     </div>
