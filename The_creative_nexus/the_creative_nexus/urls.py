@@ -62,12 +62,9 @@ urlpatterns = [
          name='swagger-ui'),
 ]
 
-# Serve static and media files during local testing even with DEBUG=False
+# Temporary workaround to serve media files locally while testing with DEBUG=False
 urlpatterns += [
     re_path(r'^media/(?P<path>.*)$', serve, {
         'document_root': settings.MEDIA_ROOT,
-    }),
-    re_path(r'^static/(?P<path>.*)$', serve, {
-        'document_root': settings.STATIC_ROOT,
     }),
 ]

@@ -1,6 +1,10 @@
-Django==4.2.11
-djangorestframework==3.14.0
+Django==5.2.12
+djangorestframework==3.15.2
 drf-spectacular==0.27.0
 Pillow==10.2.0
 django-cors-headers==4.3.1
-python-decouple==3.8
+python-dotenv==1.0.1
+gunicorn==22.0.0
+psycopg2-binary==2.9.9
+whitenoise[brotli]==6.7.0
+dj-database-url==2.2.0
