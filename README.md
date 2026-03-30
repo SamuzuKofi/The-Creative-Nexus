@@ -104,6 +104,13 @@ Follow these instructions to get a copy of the project up and running on your lo
 - **Admin Panel:** `http://localhost:8000/admin/`
 - **API Documentation:** `http://localhost:8000/api/docs/`
 
+### Creating a Superuser
+To access the admin panel with full permissions, create a superuser account:
+```bash
+python3 manage.py createsuperuser
+```
+Follow the prompts to set your username, email, and password.
+
 ### Test Accounts
 If you used the `populate_db` command, you can log in with the following credentials:
 - **Creators/Clients/Mentors:** Any of the sample users with the password `testpass123`.
