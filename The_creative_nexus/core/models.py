@@ -15,6 +15,7 @@ from PIL import Image
 from django.core.files.base import ContentFile
 from django.conf import settings
 from django.core.exceptions import ValidationError
+import threading
 
 # Status choices for various models
 PROJECT_STATUS_CHOICES = (
@@ -289,22 +290,33 @@ def send_notification_email(sender, instance, created, **kwargs):
 
     try:
         recipient = instance.recipient
-        if recipient and getattr(recipient, 'email', None):
-            from_email = getattr(
-                settings, 'DEFAULT_FROM_EMAIL', 'sedemkofiamuzu@gmail.com')
-            subject = instance.title or 'Notification from The Creative Nexus'
-            message = instance.message or ''
+        if not recipient or not getattr(recipient, 'email', None):
+            return
 
-            send_mail(
-                subject,
-                message,
-                from_email,
-                [recipient.email],
-                fail_silently=False  # Set to False so you can see auth errors in the console
-            )
+        recipient_email = recipient.email
+        title = instance.title or 'Notification from The Creative Nexus'
+        message = instance.message or ''
+        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL',
+                             'sedemkofiamuzu@gmail.com')
+
+        def send_email_async():
+            try:
+                send_mail(
+                    title,
+                    message,
+                    from_email,
+                    [recipient_email],
+                    fail_silently=False
+                )
+            except Exception as e:
+                logging.getLogger(__name__).exception(
+                    'Failed to send notification email: %s', e)
+
+        # Run in a background thread to prevent blocking the web request
+        threading.Thread(target=send_email_async, daemon=True).start()
     except Exception as e:
         logging.getLogger(__name__).exception(
-            'Failed to send notification email: %s', e)
+            'Error setting up notification email: %s', e)
 
 
 class Rating(models.Model):

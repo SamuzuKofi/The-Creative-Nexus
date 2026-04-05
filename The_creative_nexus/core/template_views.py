@@ -13,7 +13,7 @@ from rest_framework.response import Response
 
 def home(request):
     """Home page with gallery preview"""
-    works = CreativeWork.objects.all()[:12]
+    works = CreativeWork.objects.select_related('creator').all()[:12]
     return render(request, 'core/home.html', {'works': works})
 
 
@@ -30,12 +30,14 @@ def dashboard(request):
         portfolio = None
 
     my_works = CreativeWork.objects.filter(creator=user)
-    collaborations = Collaboration.objects.filter(
-        creator=user) | Collaboration.objects.filter(collaborator=user)
+    collaborations = (Collaboration.objects.filter(creator=user) |
+                      Collaboration.objects.filter(collaborator=user)).select_related('creator', 'collaborator')
+
     unread_notifications = Notification.objects.filter(
-        recipient=user, is_read=False)
-    mentorship_requests = MentorshipRequest.objects.filter(
-        mentor=user) | MentorshipRequest.objects.filter(mentee=user)
+        recipient=user, is_read=False).select_related('sender')
+
+    mentorship_requests = (MentorshipRequest.objects.filter(mentor=user) |
+                           MentorshipRequest.objects.filter(mentee=user)).select_related('mentor', 'mentee')
 
     context = {
         'portfolio': portfolio,
@@ -55,7 +57,13 @@ def portfolio_view(request, user_id=None):
         # Ensure user has a profile
         profile, _ = UserProfile.objects.get_or_create(user=user)
         if profile.skills:
-            return [s.strip() for s in profile.skills.split('|')]
+            # Try splitting by comma first, then pipe (matching explore_view logic)
+            if ',' in profile.skills:
+                return [s.strip() for s in profile.skills.split(',')]
+            elif '|' in profile.skills:
+                return [s.strip() for s in profile.skills.split('|')]
+            else:
+                return [profile.skills.strip()]
         return []
 
     # If user_id is provided, view someone else's portfolio
@@ -88,7 +96,7 @@ def portfolio_view(request, user_id=None):
         works_qs = portfolio.works.all()
         if request.user.is_authenticated:
             liked_subquery = CreativeWork.objects.filter(
-                pk=OuterRef('pk'), liked_by=request.user)
+                pk=OuterRef('pk'), liked_by=request.user.pk)
             works = works_qs.annotate(is_liked_by_user=Exists(liked_subquery))
         else:
             works = works_qs
@@ -107,7 +115,10 @@ def portfolio_view(request, user_id=None):
                         title=f'{request.user.username} viewed your portfolio',
                         message=f'{request.user.username} viewed your portfolio: {portfolio.title}'
                     )
-        except Exception:
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning(
+                'Failed to update portfolio view count or send notification: %s', e)
             # Don't fail page render if counting a view fails
             pass
         context = {
@@ -149,7 +160,7 @@ def portfolio_view(request, user_id=None):
 
     works_qs = portfolio.works.all()
     liked_subquery = CreativeWork.objects.filter(
-        pk=OuterRef('pk'), liked_by=request.user)
+        pk=OuterRef('pk'), liked_by=request.user.pk)
     works = works_qs.annotate(is_liked_by_user=Exists(liked_subquery))
 
     context = {
@@ -192,8 +203,10 @@ def profile_view(request):
 def collaborations_view(request):
     """View collaborations"""
     user = request.user
-    sent = Collaboration.objects.filter(creator=user)
-    received = Collaboration.objects.filter(collaborator=user)
+    sent = Collaboration.objects.filter(
+        creator=user).select_related('collaborator')
+    received = Collaboration.objects.filter(
+        collaborator=user).select_related('creator')
 
     context = {'sent': sent, 'received': received}
     return render(request, 'core/collaborations.html', context)
@@ -205,7 +218,8 @@ def explore_view(request):
     role = request.GET.get('role')
     search = request.GET.get('search')
 
-    profiles = UserProfile.objects.exclude(user=request.user)
+    profiles = UserProfile.objects.exclude(
+        user=request.user).select_related('user')
 
     if role:
         profiles = profiles.filter(role=role)
@@ -249,7 +263,8 @@ def register_view(request):
 def notifications_view(request):
     """Notification center page for the user"""
     user = request.user
-    notifications = Notification.objects.filter(recipient=user).order_by('-created_at')
+    notifications = Notification.objects.filter(
+        recipient=user).order_by('-created_at')
     context = {'notifications': notifications}
     return render(request, 'core/notifications.html', context)
 
@@ -258,7 +273,9 @@ def notifications_view(request):
 def projects_view(request):
     """List projects for current user and quick actions"""
     user = request.user
-    projects = Project.objects.filter(Q(created_by=user) | Q(team_members=user)).distinct()
+    projects = Project.objects.filter(
+        Q(created_by=user) | Q(team_members=user)
+    ).select_related('created_by').prefetch_related('team_members').distinct()
     context = {'projects': projects}
     return render(request, 'core/projects.html', context)
 
