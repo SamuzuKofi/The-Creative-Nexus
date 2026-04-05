@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.utils import timezone
+from django.db import transaction
 from django.db.models import Q
 
 from .models import Portfolio, CreativeWork, Collaboration, Project, Notification, Rating, MentorshipRequest, AuditLog
@@ -28,10 +29,9 @@ class PortfolioViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Portfolio.objects.all().select_related('creator')
 
-    def create(self, request, *args, **kwargs):
+    def perform_create(self, serializer):
         """Create portfolio for current user"""
-        request.data['creator'] = request.user.id
-        return super().create(request, *args, **kwargs)
+        serializer.save(creator=self.request.user)
 
     @action(detail=False, methods=['get'])
     def my_portfolio(self, request):
@@ -148,35 +148,36 @@ class CollaborationViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        collaboration.status = 'accepted'
-        collaboration.responded_at = timezone.now()
-        collaboration.save()
+        with transaction.atomic():
+            collaboration.status = 'accepted'
+            collaboration.responded_at = timezone.now()
+            collaboration.save()
 
-        # Create notification
-        Notification.objects.create(
-            recipient=collaboration.creator,
-            sender=request.user,
-            notification_type='collaboration_accepted',
-            title=f'{request.user.username} accepted your collaboration request',
-            message=f'Good news! {request.user.username} has accepted your collaboration request for {collaboration.title}',
-            related_collaboration=collaboration
-        )
+            # Create notification
+            Notification.objects.create(
+                recipient=collaboration.creator,
+                sender=request.user,
+                notification_type='collaboration_accepted',
+                title=f'{request.user.username} accepted your collaboration request',
+                message=f'Good news! {request.user.username} has accepted your collaboration request for {collaboration.title}',
+                related_collaboration=collaboration
+            )
 
-        # Create project
-        Project.objects.create(
-            collaboration=collaboration,
-            title=collaboration.title,
-            description=collaboration.description,
-            created_by=collaboration.creator,
-        )
+            # Create project
+            Project.objects.create(
+                collaboration=collaboration,
+                title=collaboration.title,
+                description=collaboration.description,
+                created_by=collaboration.creator,
+            )
 
-        AuditLog.objects.create(
-            actor=request.user,
-            action='approval',
-            entity_type='Collaboration',
-            entity_id=collaboration.id,
-            details='Collaboration request accepted.'
-        )
+            AuditLog.objects.create(
+                actor=request.user,
+                action='approval',
+                entity_type='Collaboration',
+                entity_id=collaboration.id,
+                details='Collaboration request accepted.'
+            )
 
         return Response({'status': 'accepted'})
 
@@ -190,27 +191,28 @@ class CollaborationViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        collaboration.status = 'rejected'
-        collaboration.responded_at = timezone.now()
-        collaboration.save()
+        with transaction.atomic():
+            collaboration.status = 'rejected'
+            collaboration.responded_at = timezone.now()
+            collaboration.save()
 
-        # Create notification
-        Notification.objects.create(
-            recipient=collaboration.creator,
-            sender=request.user,
-            notification_type='collaboration_rejected',
-            title=f'{request.user.username} rejected your collaboration request',
-            message=f'{request.user.username} has declined your collaboration request for {collaboration.title}',
-            related_collaboration=collaboration
-        )
+            # Create notification
+            Notification.objects.create(
+                recipient=collaboration.creator,
+                sender=request.user,
+                notification_type='collaboration_rejected',
+                title=f'{request.user.username} rejected your collaboration request',
+                message=f'{request.user.username} has declined your collaboration request for {collaboration.title}',
+                related_collaboration=collaboration
+            )
 
-        AuditLog.objects.create(
-            actor=request.user,
-            action='rejection',
-            entity_type='Collaboration',
-            entity_id=collaboration.id,
-            details='Collaboration request rejected.'
-        )
+            AuditLog.objects.create(
+                actor=request.user,
+                action='rejection',
+                entity_type='Collaboration',
+                entity_id=collaboration.id,
+                details='Collaboration request rejected.'
+            )
 
         return Response({'status': 'rejected'})
 
@@ -398,27 +400,28 @@ class MentorshipRequestViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        mentorship.status = 'accepted'
-        mentorship.responded_at = timezone.now()
-        mentorship.save()
+        with transaction.atomic():
+            mentorship.status = 'accepted'
+            mentorship.responded_at = timezone.now()
+            mentorship.save()
 
-        # Create notification
-        Notification.objects.create(
-            recipient=mentorship.mentee,
-            sender=request.user,
-            notification_type='mentorship_accepted',
-            title=f'{request.user.username} accepted your mentorship request',
-            message=f'Great! {request.user.username} has accepted your mentorship request: {mentorship.title}',
-            related_mentorship=mentorship
-        )
+            # Create notification
+            Notification.objects.create(
+                recipient=mentorship.mentee,
+                sender=request.user,
+                notification_type='mentorship_accepted',
+                title=f'{request.user.username} accepted your mentorship request',
+                message=f'Great! {request.user.username} has accepted your mentorship request: {mentorship.title}',
+                related_mentorship=mentorship
+            )
 
-        AuditLog.objects.create(
-            actor=request.user,
-            action='approval',
-            entity_type='MentorshipRequest',
-            entity_id=mentorship.id,
-            details='Mentorship request accepted.'
-        )
+            AuditLog.objects.create(
+                actor=request.user,
+                action='approval',
+                entity_type='MentorshipRequest',
+                entity_id=mentorship.id,
+                details='Mentorship request accepted.'
+            )
 
         return Response({'status': 'accepted'})
 
@@ -432,27 +435,28 @@ class MentorshipRequestViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        mentorship.status = 'rejected'
-        mentorship.responded_at = timezone.now()
-        mentorship.save()
+        with transaction.atomic():
+            mentorship.status = 'rejected'
+            mentorship.responded_at = timezone.now()
+            mentorship.save()
 
-        # Create notification
-        Notification.objects.create(
-            recipient=mentorship.mentee,
-            sender=request.user,
-            notification_type='mentorship_rejected',
-            title=f'{request.user.username} declined your mentorship request',
-            message=f'{request.user.username} was unable to accept your mentorship request: {mentorship.title}',
-            related_mentorship=mentorship
-        )
+            # Create notification
+            Notification.objects.create(
+                recipient=mentorship.mentee,
+                sender=request.user,
+                notification_type='mentorship_rejected',
+                title=f'{request.user.username} declined your mentorship request',
+                message=f'{request.user.username} was unable to accept your mentorship request: {mentorship.title}',
+                related_mentorship=mentorship
+            )
 
-        AuditLog.objects.create(
-            actor=request.user,
-            action='rejection',
-            entity_type='MentorshipRequest',
-            entity_id=mentorship.id,
-            details='Mentorship request rejected.'
-        )
+            AuditLog.objects.create(
+                actor=request.user,
+                action='rejection',
+                entity_type='MentorshipRequest',
+                entity_id=mentorship.id,
+                details='Mentorship request rejected.'
+            )
 
         return Response({'status': 'rejected'})
 

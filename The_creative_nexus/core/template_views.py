@@ -9,6 +9,7 @@ from rest_framework.decorators import api_view, permission_classes
 from django.db.models import F, Exists, OuterRef
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from django.core.paginator import Paginator
 
 
 def home(request):
@@ -247,7 +248,13 @@ def explore_view(request):
         profile.skills_list = skills_list
         profiles_with_skills.append(profile)
 
-    context = {'profiles': profiles_with_skills,
+    # Add pagination to prevent high memory usage and long load times
+    # Show 16 profiles per page
+    paginator = Paginator(profiles_with_skills, 16)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {'profiles': page_obj,
                'selected_role': role, 'search': search}
     return render(request, 'core/explore.html', context)
 
