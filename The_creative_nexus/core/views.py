@@ -58,18 +58,22 @@ class CreativeWorkViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """Assign creator and portfolio on creation"""
-        # Get or create user's portfolio
         try:
-            portfolio = Portfolio.objects.get(creator=self.request.user)
-        except Portfolio.DoesNotExist:
-            # If no portfolio exists, create one with default values
-            portfolio = Portfolio.objects.create(
+            portfolio, _ = Portfolio.objects.get_or_create(
                 creator=self.request.user,
-                title=f"{self.request.user.username}'s Portfolio",
-                description="My creative works collection"
+                defaults={
+                    'title': f"{self.request.user.username}'s Portfolio",
+                    'description': "My creative works collection"
+                }
             )
-
-        serializer.save(creator=self.request.user, portfolio=portfolio)
+            serializer.save(creator=self.request.user, portfolio=portfolio)
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).exception("Upload failed")
+            from rest_framework.exceptions import ValidationError
+            # Return the exact error as JSON so the frontend can display it
+            raise ValidationError(
+                {"detail": f"Upload failed. Server says: {str(e)}"})
 
     @action(detail=False, methods=['get'])
     def my_works(self, request):
