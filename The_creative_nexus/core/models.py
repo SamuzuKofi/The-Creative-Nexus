@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
 from django.db.models import Sum
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.core.mail import EmailMultiAlternatives
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
@@ -437,3 +437,19 @@ def update_portfolio_likes(sender, instance, action, **kwargs):
                 total=Sum('likes'))['total'] or 0
             instance.portfolio.total_likes = total
             instance.portfolio.save(update_fields=['total_likes'])
+
+
+@receiver(post_delete, sender=Portfolio)
+def delete_portfolio_files_on_delete(sender, instance, **kwargs):
+    """Delete the portfolio cover image from storage when the portfolio is deleted"""
+    if instance.cover_image:
+        instance.cover_image.delete(save=False)
+
+
+@receiver(post_delete, sender=CreativeWork)
+def delete_creative_work_files_on_delete(sender, instance, **kwargs):
+    """Delete the uploaded file and thumbnail from storage when the creative work is deleted"""
+    if instance.file:
+        instance.file.delete(save=False)
+    if instance.thumbnail:
+        instance.thumbnail.delete(save=False)

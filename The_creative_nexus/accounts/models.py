@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import URLValidator
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
 # User Role Choices
@@ -79,3 +79,9 @@ def save_user_profile(sender, instance, **kwargs):
     if hasattr(instance, 'profile'):
         instance.profile.save()
 
+
+@receiver(post_delete, sender=UserProfile)
+def delete_profile_picture_on_delete(sender, instance, **kwargs):
+    """Delete the profile picture from storage when the user profile is deleted"""
+    if instance.profile_picture:
+        instance.profile_picture.delete(save=False)

@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status, views
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly
 from django.utils import timezone
 from django.db import transaction
 from django.db.models import Q
@@ -24,7 +24,7 @@ class PortfolioViewSet(viewsets.ModelViewSet):
     """Portfolio management"""
     queryset = Portfolio.objects.all()
     serializer_class = PortfolioSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
         return Portfolio.objects.all().select_related('creator')
@@ -51,7 +51,7 @@ class CreativeWorkViewSet(viewsets.ModelViewSet):
     """Creative work (asset) management"""
     queryset = CreativeWork.objects.all()
     serializer_class = CreativeWorkSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
         return CreativeWork.objects.all().select_related('creator', 'portfolio')

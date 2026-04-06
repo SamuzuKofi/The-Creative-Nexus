@@ -10,10 +10,11 @@ class CreativeWorkSerializer(serializers.ModelSerializer):
     class Meta:
         model = CreativeWork
         fields = (
-            'id', 'creator', 'creator_username', 'title', 'description', 'work_type',
+            'id', 'creator', 'creator_username', 'portfolio', 'title', 'description', 'work_type',
             'work_type_display', 'file', 'thumbnail', 'is_featured', 'views', 'likes', 'created_at'
         )
-        read_only_fields = ('id', 'creator', 'views', 'likes', 'created_at')
+        read_only_fields = ('id', 'creator', 'portfolio',
+                            'views', 'likes', 'created_at')
 
     def get_work_type_display(self, obj):
         return obj.get_work_type_display()
@@ -68,7 +69,8 @@ class CollaborationDetailSerializer(serializers.ModelSerializer):
             'title', 'description', 'status', 'status_display', 'required_skills',
             'timeline', 'budget_range', 'created_at', 'updated_at', 'responded_at'
         )
-        read_only_fields = ('id', 'creator', 'created_at', 'updated_at', 'responded_at')
+        read_only_fields = ('id', 'creator', 'created_at',
+                            'updated_at', 'responded_at')
 
 
 class ProjectSerializer(serializers.ModelSerializer):
