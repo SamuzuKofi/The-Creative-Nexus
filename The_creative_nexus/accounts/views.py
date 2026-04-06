@@ -36,7 +36,7 @@ class RegisterView(views.APIView):
             user.save()
 
             # Send verification email
-            verification_link = f"{request.build_absolute_uri('/api/accounts/verify-email/')}?token={token}"
+            verification_link = f"{request.build_absolute_uri('/accounts/verify-email/')}?token={token}"
 
             def send_verification_email():
                 try:
@@ -53,8 +53,9 @@ class RegisterView(views.APIView):
                         "Verification email sending failed: %s", e)
 
             # Run in a background thread to prevent blocking the web request
+            # daemon=False ensures the thread finishes sending the email even if the main request completes
             threading.Thread(target=send_verification_email,
-                             daemon=True).start()
+                             daemon=False).start()
 
             return Response(
                 {'message': 'Registration successful. Please check your email to verify your account.'},
