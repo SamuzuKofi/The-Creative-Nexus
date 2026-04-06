@@ -8,6 +8,8 @@ from django.core.mail import send_mail
 from django.conf import settings
 import secrets
 import string
+import threading
+import logging
 
 from .models import CustomUser, UserProfile
 from .serializers import (
@@ -35,17 +37,24 @@ class RegisterView(views.APIView):
 
             # Send verification email
             verification_link = f"{request.build_absolute_uri('/api/accounts/verify-email/')}?token={token}"
-            try:
-                send_mail(
-                    'Verify Your Email - The Creative Nexus',
-                    f'Please click the link to verify your email: {verification_link}',
-                    settings.EMAIL_HOST_USER or 'noreply@creativenexus.com',
-                    [user.email],
-                    fail_silently=False,
-                )
-            except Exception as e:
-                # In development with console backend
-                print(f"Email sending failed: {e}")
+
+            def send_verification_email():
+                try:
+                    send_mail(
+                        'Verify Your Email - The Creative Nexus',
+                        f'Please click the link to verify your email: {verification_link}',
+                        getattr(settings, 'DEFAULT_FROM_EMAIL',
+                                'sedemkofiamuzu@gmail.com'),
+                        [user.email],
+                        fail_silently=False,
+                    )
+                except Exception as e:
+                    logging.getLogger(__name__).error(
+                        "Verification email sending failed: %s", e)
+
+            # Run in a background thread to prevent blocking the web request
+            threading.Thread(target=send_verification_email,
+                             daemon=True).start()
 
             return Response(
                 {'message': 'Registration successful. Please check your email to verify your account.'},
