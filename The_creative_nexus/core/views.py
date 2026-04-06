@@ -39,12 +39,19 @@ class PortfolioViewSet(viewsets.ModelViewSet):
         if not request.user.is_authenticated:
             return Response({'error': 'Not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
 
-        try:
-            portfolio = Portfolio.objects.get(creator=request.user)
-            serializer = self.get_serializer(portfolio)
+        portfolios = Portfolio.objects.filter(creator=request.user)
+        if portfolios.exists():
+            serializer = self.get_serializer(portfolios, many=True)
             return Response(serializer.data)
-        except Portfolio.DoesNotExist:
+        else:
             return Response({'error': 'Portfolio not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    def destroy(self, request, *args, **kwargs):
+        """Delete a portfolio"""
+        portfolio = self.get_object()
+        if portfolio.creator != request.user:
+            return Response({'error': 'Not authorized to delete this portfolio'}, status=status.HTTP_403_FORBIDDEN)
+        return super().destroy(request, *args, **kwargs)
 
 
 class CreativeWorkViewSet(viewsets.ModelViewSet):
@@ -74,14 +81,28 @@ class CreativeWorkViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """Assign creator and portfolio on creation"""
-        portfolio, _ = Portfolio.objects.get_or_create(
-            creator=self.request.user,
-            defaults={
-                'title': f"{self.request.user.username}'s Portfolio",
-                'description': "My creative works collection"
-            }
-        )
+        portfolio_id = self.request.data.get('portfolio')
+        if portfolio_id and portfolio_id != 'null':
+            portfolio = Portfolio.objects.filter(
+                id=portfolio_id, creator=self.request.user).first()
+        else:
+            portfolio = Portfolio.objects.filter(
+                creator=self.request.user).first()
+
+        if not portfolio:
+            portfolio = Portfolio.objects.create(
+                creator=self.request.user,
+                title=f"{self.request.user.username}'s Portfolio",
+                description="My creative works collection"
+            )
         serializer.save(creator=self.request.user, portfolio=portfolio)
+
+    def destroy(self, request, *args, **kwargs):
+        """Delete a creative work"""
+        work = self.get_object()
+        if work.creator != request.user:
+            return Response({'error': 'Not authorized to delete this work'}, status=status.HTTP_403_FORBIDDEN)
+        return super().destroy(request, *args, **kwargs)
 
     @action(detail=False, methods=['get'])
     def my_works(self, request):
@@ -149,6 +170,13 @@ class CollaborationViewSet(viewsets.ModelViewSet):
             entity_id=collaboration.id,
             details=f"Collaboration request '{collaboration.title}' created."
         )
+
+    def destroy(self, request, *args, **kwargs):
+        """Delete a collaboration request"""
+        collaboration = self.get_object()
+        if collaboration.creator != request.user:
+            return Response({'error': 'Not authorized to delete this collaboration'}, status=status.HTTP_403_FORBIDDEN)
+        return super().destroy(request, *args, **kwargs)
 
     @action(detail=True, methods=['post'])
     def accept(self, request, pk=None):
@@ -401,6 +429,13 @@ class MentorshipRequestViewSet(viewsets.ModelViewSet):
             entity_id=mentorship.id,
             details=f"Mentorship request '{mentorship.title}' created."
         )
+
+    def destroy(self, request, *args, **kwargs):
+        """Delete a mentorship request"""
+        mentorship = self.get_object()
+        if mentorship.mentee != request.user:
+            return Response({'error': 'Not authorized to delete this request'}, status=status.HTTP_403_FORBIDDEN)
+        return super().destroy(request, *args, **kwargs)
 
     @action(detail=True, methods=['post'])
     def accept(self, request, pk=None):

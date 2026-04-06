@@ -25,10 +25,7 @@ def dashboard(request):
     # Ensure user has a profile
     profile, _ = UserProfile.objects.get_or_create(user=user)
 
-    try:
-        portfolio = Portfolio.objects.get(creator=user)
-    except Portfolio.DoesNotExist:
-        portfolio = None
+    portfolio = Portfolio.objects.filter(creator=user).first()
 
     my_works = CreativeWork.objects.filter(creator=user)
     collaborations = (Collaboration.objects.filter(creator=user) |
@@ -132,9 +129,8 @@ def portfolio_view(request, user_id=None):
 
     # Otherwise, view/manage own portfolio
     user = request.user
-    try:
-        portfolio = Portfolio.objects.get(creator=user)
-    except Portfolio.DoesNotExist:
+    portfolio = Portfolio.objects.filter(creator=user).first()
+    if not portfolio:
         if request.method == 'POST':
             title = request.POST.get('title')
             description = request.POST.get('description')

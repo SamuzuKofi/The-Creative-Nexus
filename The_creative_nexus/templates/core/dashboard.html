@@ -94,15 +94,20 @@
                             <div class="gallery-grid" style="grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));">
                                 {% for work in my_works %}
                                     <div class="gallery-card">
-                                        {% if work.thumbnail %}
-                                            <img src="{{ work.thumbnail.url }}" alt="{{ work.title }}" class="gallery-card-img" style="height: 160px;">
-                                        {% else %}
-                                            <div class="gallery-card-img" style="height: 160px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--color-border-light), var(--color-border));">
-                                                <i data-lucide="image" style="width: 32px; height: 32px; color: var(--color-text-muted);"></i>
-                                            </div>
-                                        {% endif %}
+                                        <a href="{{ work.file.url }}" target="_blank" style="text-decoration: none; color: inherit; display: block;">
+                                            {% if work.thumbnail %}
+                                                <img src="{{ work.thumbnail.url }}" alt="{{ work.title }}" class="gallery-card-img" style="height: 160px;">
+                                            {% else %}
+                                                <div class="gallery-card-img" style="height: 160px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--color-border-light), var(--color-border));">
+                                                    <i data-lucide="image" style="width: 32px; height: 32px; color: var(--color-text-muted);"></i>
+                                                </div>
+                                            {% endif %}
+                                        </a>
                                         <div class="gallery-card-body" style="padding: var(--space-sm);">
-                                            <div class="gallery-card-title" style="font-size: 0.85rem;">{{ work.title|truncatewords:3 }}</div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                                <div class="gallery-card-title" style="font-size: 0.85rem;">{{ work.title|truncatewords:3 }}</div>
+                                                <button onclick="deleteWork({{ work.id }})" class="btn btn-sm text-danger p-0 m-0" title="Delete Work"><i data-lucide="trash-2" style="width: 14px; height: 14px;"></i></button>
+                                            </div>
                                         </div>
                                     </div>
                                 {% endfor %}
@@ -131,9 +136,14 @@
                                             <h6 style="margin-bottom: var(--space-xs); font-size: 0.95rem;">{{ collab.title }}</h6>
                                             <p style="margin: 0; font-size: 0.85rem;">with {{ collab.collaborator.username }}</p>
                                         </div>
-                                        <span class="badge {% if collab.status == 'accepted' %}badge-accent{% else %}badge-secondary{% endif %}">
-                                            {{ collab.get_status_display }}
-                                        </span>
+                                        <div style="display: flex; align-items: center;">
+                                            <span class="badge {% if collab.status == 'accepted' %}badge-accent{% else %}badge-secondary{% endif %}">
+                                                {{ collab.get_status_display }}
+                                            </span>
+                                            {% if collab.creator == user %}
+                                            <button onclick="deleteCollaboration({{ collab.id }})" class="btn btn-sm text-danger border-0 p-1 ms-2" title="Delete Request"><i data-lucide="trash-2" style="width: 16px; height: 16px;"></i></button>
+                                            {% endif %}
+                                        </div>
                                     </div>
                                 {% endfor %}
                             </div>
@@ -172,9 +182,14 @@
                                                     {% endif %}
                                                 </p>
                                             </div>
-                                            <span class="badge {% if mentor_req.status == 'accepted' %}badge-accent{% elif mentor_req.status == 'pending' %}badge-secondary{% else %}badge-danger{% endif %}" style="margin-left: var(--space-sm);">
-                                                {{ mentor_req.get_status_display }}
-                                            </span>
+                                            <div style="display: flex; align-items: center;">
+                                                <span class="badge {% if mentor_req.status == 'accepted' %}badge-accent{% elif mentor_req.status == 'pending' %}badge-secondary{% else %}badge-danger{% endif %}" style="margin-left: var(--space-sm);">
+                                                    {{ mentor_req.get_status_display }}
+                                                </span>
+                                                {% if mentor_req.mentee == user %}
+                                                <button onclick="deleteMentorship({{ mentor_req.id }})" class="btn btn-sm text-danger border-0 p-1 ms-2" title="Delete Request"><i data-lucide="trash-2" style="width: 16px; height: 16px;"></i></button>
+                                                {% endif %}
+                                            </div>
                                         </div>
                                     </div>
                                 {% endfor %}
@@ -311,6 +326,63 @@ document.getElementById('uploadBtn')?.addEventListener('click', async function()
         this.disabled = false;
     }
 });
+
+async function deleteWork(id) {
+    if (!confirm("Are you sure you want to delete this work?")) return;
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    try {
+        const response = await fetch(`/api/core/works/${id}/`, {
+            method: 'DELETE',
+            headers: { 'X-CSRFToken': csrfToken }
+        });
+        if (response.ok) {
+            window.location.reload();
+        } else {
+            alert('Failed to delete work');
+        }
+    } catch (e) {
+        console.error(e);
+        alert('Network error');
+    }
+}
+
+async function deleteCollaboration(id) {
+    if (!confirm("Are you sure you want to delete this collaboration request?")) return;
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    try {
+        const response = await fetch(`/api/core/collaborations/${id}/`, {
+            method: 'DELETE',
+            headers: { 'X-CSRFToken': csrfToken }
+        });
+        if (response.ok) {
+            window.location.reload();
+        } else {
+            alert('Failed to delete collaboration');
+        }
+    } catch (e) {
+        console.error(e);
+        alert('Network error');
+    }
+}
+
+async function deleteMentorship(id) {
+    if (!confirm("Are you sure you want to delete this mentorship request?")) return;
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    try {
+        const response = await fetch(`/api/core/mentorship-requests/${id}/`, {
+            method: 'DELETE',
+            headers: { 'X-CSRFToken': csrfToken }
+        });
+        if (response.ok) {
+            window.location.reload();
+        } else {
+            alert('Failed to delete mentorship request');
+        }
+    } catch (e) {
+        console.error(e);
+        alert('Network error');
+    }
+}
 </script>
 
 {% endblock %}

@@ -442,14 +442,35 @@ def update_portfolio_likes(sender, instance, action, **kwargs):
 @receiver(post_delete, sender=Portfolio)
 def delete_portfolio_files_on_delete(sender, instance, **kwargs):
     """Delete the portfolio cover image from storage when the portfolio is deleted"""
-    if instance.cover_image:
-        instance.cover_image.delete(save=False)
+    cover_image = instance.cover_image
+    if cover_image:
+        def delete_file():
+            try:
+                cover_image.delete(save=False)
+            except Exception as e:
+                logging.getLogger(__name__).error(
+                    "Error deleting portfolio cover: %s", e)
+
+        # Send the deletion command to Cloudinary in the background
+        threading.Thread(target=delete_file, daemon=True).start()
 
 
 @receiver(post_delete, sender=CreativeWork)
 def delete_creative_work_files_on_delete(sender, instance, **kwargs):
     """Delete the uploaded file and thumbnail from storage when the creative work is deleted"""
-    if instance.file:
-        instance.file.delete(save=False)
-    if instance.thumbnail:
-        instance.thumbnail.delete(save=False)
+    work_file = instance.file
+    work_thumb = instance.thumbnail
+
+    if work_file or work_thumb:
+        def delete_files():
+            try:
+                if work_file:
+                    work_file.delete(save=False)
+                if work_thumb:
+                    work_thumb.delete(save=False)
+            except Exception as e:
+                logging.getLogger(__name__).error(
+                    "Error deleting creative work files: %s", e)
+
+        # Send the deletion command to Cloudinary in the background
+        threading.Thread(target=delete_files, daemon=True).start()
