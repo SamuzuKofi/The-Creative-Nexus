@@ -251,26 +251,29 @@
 <script>
 document.getElementById('uploadBtn')?.addEventListener('click', async function() {
     const form = document.getElementById('uploadWorkForm');
-    const formData = new FormData();
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
-
-    console.log('Upload button clicked, CSRF token found:', !!csrfToken);
-
-    formData.append('title', document.getElementById('workTitle').value);
-    formData.append('work_type', document.getElementById('workType').value);
-    formData.append('description', document.getElementById('workDesc').value);
-
-    const fileInput = document.getElementById('workFile');
-    if (!fileInput || fileInput.files.length === 0) {
-        document.getElementById('uploadError').innerHTML = '<strong>Error:</strong> Please select a file to upload.';
-        document.getElementById('uploadError').classList.remove('d-none');
+    
+    // 1. Trigger native HTML5 form validation to prevent blank submissions
+    if (!form.reportValidity()) {
         return;
     }
 
-    formData.append('file', fileInput.files[0]);
+    // 2. Gather form data automatically from the inputs
+    const formData = new FormData(form);
+    
+    // 3. Get the CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+
+    // Append the portfolio explicitly
     formData.append('portfolio', {{ portfolio.id|default:'null' }});
 
+    // Update UI to show loading state
+    const originalBtnText = this.innerHTML;
+    this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Uploading...';
+    this.disabled = true;
+    document.getElementById('uploadError').classList.add('d-none');
+
     try {
+        // 4. Send the POST request to the API
         const response = await fetch('/api/core/works/', {
             method: 'POST',
             credentials: 'same-origin',
@@ -278,7 +281,10 @@ document.getElementById('uploadBtn')?.addEventListener('click', async function()
             body: formData
         });
 
-        console.log('Upload response status:', response.status);
+        if (response.ok) {
+            window.location.reload();
+        } else {
+            let errorMsg = '';
             const contentType = response.headers.get('content-type');
             if (contentType && contentType.includes('application/json')) {
                 const data = await response.json();
@@ -290,11 +296,19 @@ document.getElementById('uploadBtn')?.addEventListener('click', async function()
             document.getElementById('uploadError').innerHTML = `<strong>Upload Error:</strong><br/>${errorMsg}`;
             document.getElementById('uploadError').classList.remove('d-none');
             console.error('Upload error:', errorMsg, response);
+            
+            // Reset button
+            this.innerHTML = originalBtnText;
+            this.disabled = false;
         }
     } catch (error) {
         console.error('Error:', error);
         document.getElementById('uploadError').textContent = 'Upload failed: ' + error.message;
         document.getElementById('uploadError').classList.remove('d-none');
+        
+        // Reset button
+        this.innerHTML = originalBtnText;
+        this.disabled = false;
     }
 });
 </script>

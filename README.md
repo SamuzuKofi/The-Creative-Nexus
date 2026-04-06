@@ -5,6 +5,7 @@
 ![Django REST Framework](https://img.shields.io/badge/DRF-3.15-A30000?style=for-the-badge&logo=django)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?style=for-the-badge&logo=postgresql)
 ![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-7952B3?style=for-the-badge&logo=bootstrap)
+![Cloudinary](https://img.shields.io/badge/Cloudinary-3448C5?style=for-the-badge&logo=cloudinary&logoColor=white)
 
 A digital community platform designed to connect, empower, and inspire the youth of Ghana through technology and the creative arts.
 
@@ -29,6 +30,8 @@ The creative economy in Ghana represents a significant but under-funded and over
 - **Notification System:** Users receive email and in-app notifications for key events like collaboration requests and project updates.
 - **Rating System:** A 1-5 star rating system with reviews for completed collaborations.
 - **Audit Trail:** Immutable logs for all major transactions and status changes.
+- **Cloud Media Management:** Automatic image optimization and secure file storage using Cloudinary, including auto-cleanup of deleted assets.
+- **Performance Optimized:** Efficient database querying (resolving N+1 issues) and asynchronous background threading for heavy operations like email sending.
 
 ### Frontend
 - **Modern UI/UX:** A responsive, Instagram-inspired aesthetic built with Bootstrap 5, using a consistent design system based on CSS variables and Lucide icons.
@@ -43,7 +46,8 @@ The creative economy in Ghana represents a significant but under-funded and over
 - **Backend:** Python, Django, Django REST Framework
 - **Database:** SQLite3 (for development), PostgreSQL (for production)
 - **Frontend:** HTML, CSS, JavaScript, Bootstrap 5
-- **File Storage:** Local storage (for development), AWS S3 (for production)
+- **File Storage:** Local storage (for development), Cloudinary (for production)
+- **Deployment:** Render
 - **Icons:** Lucide Icons
 
 ## Getting Started
@@ -79,6 +83,12 @@ Follow these instructions to get a copy of the project up and running on your lo
 
     # Email settings (for Gmail SMTP)
     EMAIL_HOST_PASSWORD='your-google-app-password'
+
+    # Production Database (Optional for local dev)
+    # DATABASE_URL=postgres://user:password@localhost:5432/dbname
+    
+    # Cloudinary Storage (Optional for local dev)
+    # CLOUDINARY_URL=cloudinary://<api_key>:<api_secret>@<cloud_name>
     ```
     > **Note:** For `EMAIL_HOST_PASSWORD`, you must generate a 16-character "App Password" from your Google Account settings.
 
