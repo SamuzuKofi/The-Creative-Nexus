@@ -56,24 +56,32 @@ class CreativeWorkViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return CreativeWork.objects.all().select_related('creator', 'portfolio')
 
+    def create(self, request, *args, **kwargs):
+        """Safely catch and return any backend crashes during upload as JSON"""
+        try:
+            return super().create(request, *args, **kwargs)
+        except Exception as e:
+            from rest_framework.exceptions import APIException
+            from django.http import Http404
+            if isinstance(e, (APIException, Http404)):
+                raise  # Let DRF handle normal validation errors like blank fields
+            import logging
+            logging.getLogger(__name__).exception("Upload completely failed")
+            return Response(
+                {"detail": f"Upload failed. Server says: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
     def perform_create(self, serializer):
         """Assign creator and portfolio on creation"""
-        try:
-            portfolio, _ = Portfolio.objects.get_or_create(
-                creator=self.request.user,
-                defaults={
-                    'title': f"{self.request.user.username}'s Portfolio",
-                    'description': "My creative works collection"
-                }
-            )
-            serializer.save(creator=self.request.user, portfolio=portfolio)
-        except Exception as e:
-            import logging
-            logging.getLogger(__name__).exception("Upload failed")
-            from rest_framework.exceptions import ValidationError
-            # Return the exact error as JSON so the frontend can display it
-            raise ValidationError(
-                {"detail": f"Upload failed. Server says: {str(e)}"})
+        portfolio, _ = Portfolio.objects.get_or_create(
+            creator=self.request.user,
+            defaults={
+                'title': f"{self.request.user.username}'s Portfolio",
+                'description': "My creative works collection"
+            }
+        )
+        serializer.save(creator=self.request.user, portfolio=portfolio)
 
     @action(detail=False, methods=['get'])
     def my_works(self, request):
