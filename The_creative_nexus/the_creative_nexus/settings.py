@@ -199,6 +199,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'sedemkofiamuzu@gmail.com'
 # Use environment variables for sensitive data to avoid committing secrets
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+EMAIL_TIMEOUT = 5
 DEFAULT_FROM_EMAIL = 'The Creative Nexus <sedemkofiamuzu@gmail.com>'
 
 # Authentication
