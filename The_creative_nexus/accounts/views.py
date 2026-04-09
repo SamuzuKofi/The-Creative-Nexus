@@ -43,21 +43,21 @@ class RegisterView(views.APIView):
                     'Verify Your Email - The Creative Nexus',
                     f'Please click the link to verify your email: {verification_link}',
                     getattr(settings, 'DEFAULT_FROM_EMAIL',
-                            'sedemkofiamuzu@gmail.com'),
+                            'onboarding@resend.dev'),
                     [user.email],
                     fail_silently=False,
                 )
             except Exception as e:
-                # FAIL-SAFE: If Render's firewall blocks SMTP, auto-verify so testing isn't blocked
                 logging.getLogger(__name__).error(
-                    "SMTP Failed. Auto-verifying. Link: %s | Error: %s", verification_link, e)
+                    "Resend Email API Failed. Error: %s", e)
 
+                # DEMO MODE FAIL-SAFE: Automatically verify the user so facilitators aren't blocked!
                 user.email_verified = True
                 user.email_verification_token = ''
                 user.save()
 
                 return Response(
-                    {'message': 'Registration successful! (Email server was unreachable, so we automatically verified your account for testing).'},
+                    {'message': 'Registration successful! (Auto-verified for project demonstration since email is sandboxed).'},
                     status=status.HTTP_201_CREATED
                 )
 
@@ -111,15 +111,21 @@ class ResendVerificationEmailView(views.APIView):
                     'Verify Your Email - The Creative Nexus',
                     f'Please click the link to verify your email: {verification_link}',
                     getattr(settings, 'DEFAULT_FROM_EMAIL',
-                            'sedemkofiamuzu@gmail.com'),
+                            'onboarding@resend.dev'),
                     [user.email],
                     fail_silently=False,
                 )
                 return Response({'message': 'If an account with this email exists, a verification link has been sent.'})
             except Exception as e:
                 logging.getLogger(__name__).error(
-                    "SMTP Failed during resend. Error: %s", e)
-                return Response({'error': "Email server is currently blocked by the host network. Account may already be auto-verified."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                    "Resend API Failed during resend. Error: %s", e)
+
+                # DEMO MODE FAIL-SAFE: Auto-verify on resend as well
+                user.email_verified = True
+                user.email_verification_token = ''
+                user.save()
+
+                return Response({'message': 'Account auto-verified for testing! You can now log in.'}, status=status.HTTP_200_OK)
 
         except CustomUser.DoesNotExist:
             # Return success anyway to prevent email enumeration attacks

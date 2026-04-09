@@ -10,3 +10,4 @@ whitenoise[brotli]==6.7.0
 dj-database-url==2.2.0
 cloudinary==1.38.0
 django-cloudinary-storage==0.3.0
+django-anymail[resend]==11.1

@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'cloudinary_storage',
     'cloudinary',
+    'anymail',
     # Local apps
     'accounts',
     'core',
@@ -192,16 +193,15 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1:8000']
 
 # Email Configuration
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 465
-EMAIL_USE_SSL = True
-EMAIL_USE_TLS = False
-EMAIL_HOST_USER = 'sedemkofiamuzu@gmail.com'
-# Use environment variables for sensitive data to avoid committing secrets
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-EMAIL_TIMEOUT = 5
-DEFAULT_FROM_EMAIL = 'The Creative Nexus <sedemkofiamuzu@gmail.com>'
+EMAIL_BACKEND = 'anymail.backends.resend.EmailBackend'
+ANYMAIL = {
+    "RESEND_API_KEY": os.environ.get('RESEND_API_KEY', ''),
+}
+
+# Resend allows sending from onboarding@resend.dev for testing purposes without a custom domain.
+# Note: When using onboarding@resend.dev, you can ONLY send emails to the email address you used to sign up for Resend!
+DEFAULT_FROM_EMAIL = os.environ.get(
+    'DEFAULT_FROM_EMAIL', 'onboarding@resend.dev')
 
 # Authentication
 AUTH_USER_MODEL = 'accounts.CustomUser'

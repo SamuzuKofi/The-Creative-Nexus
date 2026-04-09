@@ -79,9 +79,7 @@
                         </button>
                     </form>
 
-                    <div id="successMessage" class="alert alert-success d-none" role="alert">
-                        Registration successful! Please check your email to verify your account.
-                    </div>
+                    <div id="successMessage" class="alert alert-success d-none" role="alert"></div>
 
                     <hr>
                     <p class="text-center">Already have an account? <a href="{% url 'login' %}">Login here</a></p>
@@ -125,6 +123,7 @@ document.getElementById('registerForm').addEventListener('submit', async functio
         if (response.ok) {
             const data = await response.json();
             document.getElementById('registerForm').reset();
+            document.getElementById('successMessage').textContent = data.message || 'Registration successful!';
             document.getElementById('successMessage').classList.remove('d-none');
             setTimeout(() => {
                 window.location.href = '{% url "home" %}';
