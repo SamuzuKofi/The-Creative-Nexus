@@ -24,10 +24,11 @@ The creative economy in Ghana represents a significant but under-funded and over
 ### Backend
 - **User Authentication:** Custom user model with email verification and 4 distinct roles (Creator, Client, Mentor, Admin).
 - **User Profiles:** Role-based profiles with customizable bio, skills, location, and profile pictures.
-- **Portfolio Management:** Creators can build and manage portfolios, uploading various work types (Digital Art, Graphic Design, Animation, etc.).
+- **Portfolio Management:** Creators can build and manage multiple portfolios, uploading various work types (Digital Art, Graphic Design, Animation, etc.).
 - **Collaboration System:** Send, accept, or reject collaboration requests with details on skills, timeline, and budget.
 - **Project Management:** Automatically create projects from accepted collaborations with status tracking (Draft, In Progress, Completed).
-- **Notification System:** Users receive email and in-app notifications for key events like collaboration requests and project updates.
+- **Notification System:** Users receive in-app notifications for key events like collaboration requests and project updates.
+- **Email System:** Integrated **Resend HTTP API** for reliable email delivery, featuring a "Sandbox Demo Mode" that auto-verifies users for seamless school project testing.
 - **Rating System:** A 1-5 star rating system with reviews for completed collaborations.
 - **Audit Trail:** Immutable logs for all major transactions and status changes.
 - **Cloud Media Management:** Automatic image optimization and secure file storage using Cloudinary, including auto-cleanup of deleted assets.
@@ -81,8 +82,9 @@ Follow these instructions to get a copy of the project up and running on your lo
     DEBUG=True
     ALLOWED_HOSTS=localhost,127.0.0.1
 
-    # Email settings (for Gmail SMTP)
-    EMAIL_HOST_PASSWORD='your-google-app-password'
+    # Email settings (Resend API)
+    RESEND_API_KEY='your-resend-api-key'
+    DEFAULT_FROM_EMAIL='onboarding@resend.dev'
 
     # Production Database (Optional for local dev)
     # DATABASE_URL=postgres://user:password@localhost:5432/dbname
@@ -90,7 +92,7 @@ Follow these instructions to get a copy of the project up and running on your lo
     # Cloudinary Storage (Optional for local dev)
     # CLOUDINARY_URL=cloudinary://<api_key>:<api_secret>@<cloud_name>
     ```
-    > **Note:** For `EMAIL_HOST_PASSWORD`, you must generate a 16-character "App Password" from your Google Account settings.
+    > **Note:** Get your `RESEND_API_KEY` by registering a free account at Resend.com.
 
 4.  **Apply database migrations:**
     ```bash
@@ -115,7 +117,7 @@ Follow these instructions to get a copy of the project up and running on your lo
 - **API Documentation:** `http://localhost:8000/api/docs/`
 
 ### Creating a Superuser
-To access the admin panel with full permissions, create a superuser account:
+**Locally:** To access the admin panel with full permissions, create a superuser account:
 ```bash
 python3 manage.py createsuperuser
 ```
