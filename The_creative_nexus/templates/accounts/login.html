@@ -94,24 +94,32 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             body: JSON.stringify(formData)
         });
         
-        const data = await response.json();
-        
         if (response.ok) {
             window.location.href = '{% url "dashboard" %}';
         } else {
-            // Handle validation errors
             let errorMsg = 'Login failed. Please check your credentials.';
-            if (data.non_field_errors) {
-                errorMsg = data.non_field_errors[0];
-            } else if (data.error) {
-                errorMsg = data.error;
+            const contentType = response.headers.get('content-type');
+            
+            if (contentType && contentType.includes('application/json')) {
+                const data = await response.json();
+                if (data.non_field_errors) {
+                    errorMsg = data.non_field_errors[0];
+                } else if (data.error) {
+                    errorMsg = data.error;
+                } else if (data.detail) {
+                    errorMsg = data.detail;
+                }
+            } else {
+                const text = await response.text();
+                errorMsg = `Server error (${response.status}): ${text.substring(0, 150)}`;
             }
             document.getElementById('errorMessage').textContent = errorMsg;
             document.getElementById('errorMessage').classList.remove('d-none');
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('An error occurred. Please try again.');
+        document.getElementById('errorMessage').textContent = 'Network error. Please check your connection and try again.';
+        document.getElementById('errorMessage').classList.remove('d-none');
     }
 });
 
@@ -138,14 +146,20 @@ document.getElementById('resendEmailBtn')?.addEventListener('click', async funct
             body: JSON.stringify({ email: emailInput.value })
         });
         
-        const data = await response.json();
+        const contentType = response.headers.get('content-type');
         if (response.ok) {
             alert('Verification email resent! Please check your inbox and spam folder.');
         } else {
-            alert(data.error || data.message || 'Failed to resend email.');
+            if (contentType && contentType.includes('application/json')) {
+                const data = await response.json();
+                alert(data.error || data.message || 'Failed to resend email.');
+            } else {
+                const text = await response.text();
+                alert(`Server error (${response.status}): ${text.substring(0, 150)}`);
+            }
         }
     } catch (error) {
-        alert('Network error occurred. Please try again later.');
+        alert('Network error occurred. Please check your internet connection.');
     } finally {
         this.innerText = originalText;
         this.style.pointerEvents = 'auto';
