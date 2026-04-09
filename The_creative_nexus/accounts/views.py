@@ -38,24 +38,21 @@ class RegisterView(views.APIView):
             # Send verification email
             verification_link = f"{request.build_absolute_uri('/accounts/verify-email/')}?token={token}"
 
-            def send_verification_email():
-                try:
-                    send_mail(
-                        'Verify Your Email - The Creative Nexus',
-                        f'Please click the link to verify your email: {verification_link}',
-                        getattr(settings, 'DEFAULT_FROM_EMAIL',
-                                'sedemkofiamuzu@gmail.com'),
-                        [user.email],
-                        fail_silently=False,
-                    )
-                except Exception as e:
-                    logging.getLogger(__name__).error(
-                        "Verification email sending failed: %s", e)
-
-            # Run in a background thread to prevent blocking the web request
-            # daemon=False ensures the thread finishes sending the email even if the main request completes
-            threading.Thread(target=send_verification_email,
-                             daemon=False).start()
+            try:
+                send_mail(
+                    'Verify Your Email - The Creative Nexus',
+                    f'Please click the link to verify your email: {verification_link}',
+                    getattr(settings, 'DEFAULT_FROM_EMAIL',
+                            'sedemkofiamuzu@gmail.com'),
+                    [user.email],
+                    fail_silently=False,
+                )
+            except Exception as e:
+                user.delete()  # Clean up the user so they don't get stuck unverified
+                return Response(
+                    {'email': [f"Email server error: {str(e)}"]},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
 
             return Response(
                 {'message': 'Registration successful. Please check your email to verify your account.'},
@@ -102,23 +99,18 @@ class ResendVerificationEmailView(views.APIView):
 
             verification_link = f"{request.build_absolute_uri('/accounts/verify-email/')}?token={token}"
 
-            def send_verification_email():
-                try:
-                    send_mail(
-                        'Verify Your Email - The Creative Nexus',
-                        f'Please click the link to verify your email: {verification_link}',
-                        getattr(settings, 'DEFAULT_FROM_EMAIL',
-                                'sedemkofiamuzu@gmail.com'),
-                        [user.email],
-                        fail_silently=False,
-                    )
-                except Exception as e:
-                    logging.getLogger(__name__).error(
-                        "Verification email sending failed: %s", e)
-
-            threading.Thread(target=send_verification_email,
-                             daemon=False).start()
-            return Response({'message': 'If an account with this email exists, a verification link has been sent.'})
+            try:
+                send_mail(
+                    'Verify Your Email - The Creative Nexus',
+                    f'Please click the link to verify your email: {verification_link}',
+                    getattr(settings, 'DEFAULT_FROM_EMAIL',
+                            'sedemkofiamuzu@gmail.com'),
+                    [user.email],
+                    fail_silently=False,
+                )
+                return Response({'message': 'If an account with this email exists, a verification link has been sent.'})
+            except Exception as e:
+                return Response({'error': f"Email server error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         except CustomUser.DoesNotExist:
             # Return success anyway to prevent email enumeration attacks

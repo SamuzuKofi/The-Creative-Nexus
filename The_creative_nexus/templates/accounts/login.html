@@ -54,6 +54,10 @@
                                 Don't have an account? 
                                 <a href="{% url 'register' %}" style="font-weight: 500;">Create one</a>
                             </p>
+                            <p style="margin: var(--space-sm) 0 0; font-size: 0.95rem;">
+                                Didn't receive verification email? 
+                                <a href="#" id="resendEmailBtn" style="font-weight: 500;">Resend it</a>
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -108,6 +112,43 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     } catch (error) {
         console.error('Error:', error);
         alert('An error occurred. Please try again.');
+    }
+});
+
+document.getElementById('resendEmailBtn')?.addEventListener('click', async function(e) {
+    e.preventDefault();
+    
+    const emailInput = document.querySelector('input[name="email"]');
+    if (!emailInput || !emailInput.value) {
+        alert('Please enter your email address in the input box first so we know where to send it!');
+        return;
+    }
+
+    const originalText = this.innerText;
+    this.innerText = 'Sending...';
+    this.style.pointerEvents = 'none';
+    
+    try {
+        const response = await fetch('/api/accounts/resend-verification/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('input[name="csrfmiddlewaretoken"]')?.value || ''
+            },
+            body: JSON.stringify({ email: emailInput.value })
+        });
+        
+        const data = await response.json();
+        if (response.ok) {
+            alert('Verification email resent! Please check your inbox and spam folder.');
+        } else {
+            alert(data.error || data.message || 'Failed to resend email.');
+        }
+    } catch (error) {
+        alert('Network error occurred. Please try again later.');
+    } finally {
+        this.innerText = originalText;
+        this.style.pointerEvents = 'auto';
     }
 });
 </script>
