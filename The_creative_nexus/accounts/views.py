@@ -253,4 +253,13 @@ class SetupSystemView(views.APIView):
         else:
             messages.append("Superuser 'admin' already exists.")
 
+        # 3. Populate database with sample data if requested
+        if request.query_params.get('populate') == 'true':
+            from django.core.management import call_command
+            try:
+                call_command('populate_db')
+                messages.append("Successfully populated database with sample data!")
+            except Exception as e:
+                messages.append(f"Error populating database: {str(e)}")
+
         return Response({"status": "success", "messages": messages})
