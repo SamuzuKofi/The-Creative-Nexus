@@ -80,6 +80,51 @@ class VerifyEmailView(views.APIView):
             return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
 
 
+class ResendVerificationEmailView(views.APIView):
+    """Resend email verification link"""
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = request.data.get('email')
+        if not email:
+            return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = CustomUser.objects.get(email=email)
+            if user.email_verified:
+                return Response({'error': 'Email is already verified'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Generate a new token
+            token = ''.join(secrets.choice(
+                string.ascii_letters + string.digits) for _ in range(32))
+            user.email_verification_token = token
+            user.save()
+
+            verification_link = f"{request.build_absolute_uri('/accounts/verify-email/')}?token={token}"
+
+            def send_verification_email():
+                try:
+                    send_mail(
+                        'Verify Your Email - The Creative Nexus',
+                        f'Please click the link to verify your email: {verification_link}',
+                        getattr(settings, 'DEFAULT_FROM_EMAIL',
+                                'sedemkofiamuzu@gmail.com'),
+                        [user.email],
+                        fail_silently=False,
+                    )
+                except Exception as e:
+                    logging.getLogger(__name__).error(
+                        "Verification email sending failed: %s", e)
+
+            threading.Thread(target=send_verification_email,
+                             daemon=False).start()
+            return Response({'message': 'If an account with this email exists, a verification link has been sent.'})
+
+        except CustomUser.DoesNotExist:
+            # Return success anyway to prevent email enumeration attacks
+            return Response({'message': 'If an account with this email exists, a verification link has been sent.'})
+
+
 class LoginView(views.APIView):
     """User login endpoint"""
     permission_classes = [AllowAny]
@@ -177,3 +222,28 @@ class UserProfileViewSet(viewsets.ViewSet):
 
         serializer = UserProfileSerializer(profiles, many=True)
         return Response(serializer.data)
+
+
+class SetupSystemView(views.APIView):
+    """Temporary endpoint to setup the database since terminal is unavailable"""
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        messages = []
+
+        # 1. Clear unverified users
+        deleted_count, _ = CustomUser.objects.filter(
+            email_verified=False, is_superuser=False).delete()
+        messages.append(f"Deleted {deleted_count} unverified users.")
+
+        # 2. Create superuser if it doesn't exist
+        if not CustomUser.objects.filter(username='admin').exists():
+            # Creates an admin account with a default password
+            CustomUser.objects.create_superuser(
+                'admin', 'admin@creativenexus.com', 'AdminPass123!')
+            messages.append(
+                "Superuser 'admin' created with password 'AdminPass123!'.")
+        else:
+            messages.append("Superuser 'admin' already exists.")
+
+        return Response({"status": "success", "messages": messages})
